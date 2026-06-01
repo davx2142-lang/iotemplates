@@ -1,0 +1,83 @@
+{
+  "name": "io-motion",
+  "version": "2.2.0",
+  "description": "IO Motion — utility-first, combinable CSS motion library. Trigger and combine modern web animations with io- classes: the Tailwind way, but for motion. Works in plain HTML, PHP, and React.",
+  "keywords": [
+    "css",
+    "animation",
+    "motion",
+    "utility-first",
+    "scroll-reveal",
+    "scroll-linked",
+    "micro-interactions",
+    "transitions",
+    "keyframes",
+    "react",
+    "iotemplates",
+    "io-motion"
+  ],
+  "homepage": "https://www.iotemplates.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/davx2142-lang/iotemplates.git"
+  },
+  "bugs": {
+    "url": "https://github.com/davx2142-lang/iotemplates/issues"
+  },
+  "license": "MIT",
+  "author": "iotemplates",
+  "main": "io.js",
+  "module": "io.js",
+  "types": "io.d.ts",
+  "style": "dist/io.css",
+  "unpkg": "dist/io.min.css",
+  "jsdelivr": "dist/io.min.css",
+  "files": [
+    "dist",
+    "react",
+    "io.js",
+    "io.d.ts",
+    "io-catalog.json",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": {
+      "types": "./io.d.ts",
+      "import": "./io.js",
+      "require": "./io.js",
+      "default": "./io.js"
+    },
+    "./css": "./dist/io.css",
+    "./css/min": "./dist/io.min.css",
+    "./react": {
+      "types": "./react/index.d.ts",
+      "import": "./react/index.mjs",
+      "default": "./react/index.mjs"
+    },
+    "./catalog": "./io-catalog.json",
+    "./dist/*": "./dist/*"
+  },
+  "peerDependencies": {
+    "react": ">=16.8.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "scripts": {
+    "build": "node build.mjs",
+    "build:sh": "sh build.sh",
+    "assets": "node gen-assets.mjs",
+    "prepublishOnly": "node build.mjs",
+    "release:patch": "npm version patch -m \"release: v%s\" && git push && git push --tags",
+    "release:minor": "npm version minor -m \"release: v%s\" && git push && git push --tags",
+    "release:major": "npm version major -m \"release: v%s\" && git push && git push --tags"
+  },
+  "sideEffects": [
+    "*.css",
+    "io.js"
+  ]
+}

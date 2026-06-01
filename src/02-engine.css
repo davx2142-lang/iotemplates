@@ -1,0 +1,135 @@
+/* ============================================================
+   IO Motion — 02 · Engine
+   Két, egymást kiegészítő motor:
+
+   1) REVEAL ENGINE (.io)  →  átmenet (transition) alapú,
+      KOMBINÁLHATÓ belépők. Pl. `io io-fade io-slide-right io-zoom-in`.
+      A "kezdő állapotot" a reveal-osztályok adják (CSS változókkal),
+      a megjelenést az `.io-in` állapot kapcsolja be (JS vagy trigger).
+
+   2) MOTION ENGINE (.io-motion)  →  @keyframes alapú,
+      ismétlődő / figyelemfelkeltő animációk és a régi API.
+   ============================================================ */
+
+/* ---------- 1) REVEAL ENGINE ---------- */
+.io {
+  /* komponálható transzformáció-csatornák (alapból semleges).
+     A px egység kell a @property <length-percentage> miatt. */
+  --io-tx: 0px;
+  --io-ty: 0px;
+  --io-tz: 0px;
+  --io-rotate: 0deg;
+  --io-scale: 1;
+  --io-blur: 0px;
+  --io-opacity: 1;
+
+  transform: translate3d(var(--io-tx), var(--io-ty), var(--io-tz))
+             rotate(var(--io-rotate))
+             scale(var(--io-scale));
+  opacity: var(--io-opacity);
+  filter: blur(var(--io-blur));
+
+  transition-property: transform, opacity, filter;
+  transition-duration: var(--io-duration);
+  transition-timing-function: var(--io-ease);
+  transition-delay: var(--io-delay);
+  will-change: transform, opacity, filter;
+}
+
+/* Megjelenített (cél) állapot: minden csatorna visszaáll semlegesre.
+   Mivel a reveal-osztályok csak a kezdő értékeket állítják, az .io-in
+   egyszerre "old fel" minden kombinált effektet → tökéletesen kombinálható. */
+.io-in {
+  --io-tx: 0px;
+  --io-ty: 0px;
+  --io-tz: 0px;
+  --io-rotate: 0deg;
+  --io-scale: 1;
+  --io-blur: 0px;
+  --io-opacity: 1;
+}
+
+/* Reveal trigger: amíg nincs .io-in, rejtett/eltolt marad.
+   A `.io-reveal` és `.io-scroll` jelzi a JS-nek, hogy figyelje (IntersectionObserver). */
+.io-reveal:not(.io-in),
+.io-scroll:not(.io-in) {
+  /* a tényleges kezdőértékeket a reveal-osztályok adják (04-reveal.css) */
+}
+
+/* HOVER trigger a reveal engine-hez (kombinálható):
+   io io-fade io-slide-up io-hover   → alapból rejtett, hoverre úszik be.
+   Működik az elemen vagy a közvetlen szülőn hoverelve is. */
+.io.io-hover:hover,
+:hover > .io.io-hover {
+  --io-tx: 0px; --io-ty: 0px; --io-tz: 0px;
+  --io-rotate: 0deg; --io-scale: 1; --io-blur: 0px; --io-opacity: 1;
+}
+
+/* ---------- SCROLL-LINKED (io-scrub): a JS a görgetéshez köti ----------
+   A transform/opacity/filter értékeket a runtime állítja inline,
+   ezért itt csak az átmenetet kapcsoljuk ki (azonnal kövesse a görgetést). */
+.io-scrub {
+  transition: none !important;
+  will-change: transform, opacity, filter;
+}
+/* Szín-scrub: a szín a görgetési haladással (--io-p: 0→1) keveredik.
+   Saját színek: style="--io-scrub-from:#...; --io-scrub-to:#..." */
+.io-scrub-color {
+  color: color-mix(
+    in oklab,
+    var(--io-scrub-from, currentColor),
+    var(--io-scrub-to, #38bdf8) calc(var(--io-p, 0) * 100%)
+  );
+}
+@media (prefers-reduced-motion: reduce) {
+  .io-scrub { transform: none !important; opacity: 1 !important; filter: none !important; }
+}
+
+/* ---------- 2) MOTION ENGINE (keyframe / legacy) ---------- */
+.io-motion {
+  animation-name: var(--io-anim, none);
+  animation-fill-mode: both;
+  animation-duration: var(--io-duration);
+  animation-timing-function: var(--io-ease);
+  animation-iteration-count: 1;
+}
+
+/* ---------- Triggerek (mindkét motorhoz) ---------- */
+
+/* Hover trigger: alapból nincs animáció, hoverre indul (elemen vagy szülőn) */
+.io-motion.io-hover { animation-name: none; }
+.io-motion.io-hover:hover,
+*:hover > .io-motion.io-hover { animation-name: var(--io-anim, none); }
+
+/* Mindig fut */
+.io-motion.io-always { animation-name: var(--io-anim, none); }
+
+/* Szüneteltetés */
+.io-paused,
+.io-motion.io-paused { animation-play-state: paused; animation-name: none; }
+
+/* ---------- Akadálymentesség: csökkentett mozgás ----------
+   FONTOS: a reveal engine alapból opacity:0 / eltolt állapotból indul,
+   és a megjelenést az átmenet adja. Ha az átmenetet kikapcsoljuk,
+   a tartalom NEM tűnhet el → minden reveal-elemet expliciten láthatóvá
+   teszünk (mozgás nélkül). Ez WCAG-helyes és nem törékeny. */
+@media (prefers-reduced-motion: reduce) {
+  .io-motion,
+  [class*="io-"] {
+    animation: none !important;
+    transition-duration: 0.001ms !important;
+    transition-delay: 0ms !important;
+  }
+  /* reveal tartalom: azonnal, teljesen látható, semmi mozgás */
+  .io,
+  .io-reveal,
+  .io-scroll,
+  .io-scrub,
+  .io-words .io-w,
+  .io-chars .io-c {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    clip-path: none !important;
+  }
+}

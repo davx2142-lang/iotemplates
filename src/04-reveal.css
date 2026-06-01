@@ -1,0 +1,87 @@
+/* ============================================================
+   IO Motion — 04 · Reveal (kombinálható belépők)
+   Ezek CSAK a kezdő állapotot állítják be (CSS változókkal).
+   A megjelenést az `.io-in` kapcsolja (JS reveal vagy `.io-now`).
+   Bármelyik kettő/három szabadon kombinálható:
+
+     <div class="io io-reveal io-fade io-slide-up io-700"> … </div>
+     <div class="io io-reveal io-fade io-slide-right io-zoom-in"> … </div>
+
+   2026 trend: lágy, rövid távú elcsúszás + finom blur + opacity.
+   ============================================================ */
+
+/* ---- Opacity ---- */
+.io-fade:not(.io-in)        { --io-opacity: 0; }
+
+/* ---- Slide / Move (a kezdő pozícióból csúszik a helyére) ---- */
+.io-slide-up:not(.io-in)    { --io-ty: var(--io-distance); }                 /* alulról fel */
+.io-slide-down:not(.io-in)  { --io-ty: calc(-1 * var(--io-distance)); }      /* felülről le */
+.io-slide-left:not(.io-in)  { --io-tx: var(--io-distance); }                 /* jobbról balra */
+.io-slide-right:not(.io-in) { --io-tx: calc(-1 * var(--io-distance)); }      /* balról jobbra */
+
+/* irány-alias (mozgás iránya szerint olvasva ugyanaz) */
+.io-move-up:not(.io-in)     { --io-ty: var(--io-distance); }
+.io-move-down:not(.io-in)   { --io-ty: calc(-1 * var(--io-distance)); }
+.io-move-left:not(.io-in)   { --io-tx: var(--io-distance); }
+.io-move-right:not(.io-in)  { --io-tx: calc(-1 * var(--io-distance)); }
+
+/* ---- Zoom / Scale ---- */
+.io-zoom-in:not(.io-in)     { --io-scale: var(--io-zoom-in-from); }
+.io-zoom-out:not(.io-in)    { --io-scale: var(--io-zoom-out-from); }
+
+/* ---- Blur (2026 trend: "frosted" élesedő belépő) ---- */
+.io-blur:not(.io-in)        { --io-blur: var(--io-blur-from); }
+
+/* ---- Rotate / Tilt belépő ---- */
+.io-rotate-in:not(.io-in)   { --io-rotate: var(--io-rotate-from); }
+.io-rotate-in-r:not(.io-in) { --io-rotate: calc(-1 * var(--io-rotate-from)); }
+
+/* ---- Flip (3D) ---- */
+.io-flip-up,
+.io-flip-down,
+.io-flip-left,
+.io-flip-right { transform-style: preserve-3d; }
+
+.io-flip-up:not(.io-in),
+.io-flip-down:not(.io-in),
+.io-flip-left:not(.io-in),
+.io-flip-right:not(.io-in) { --io-opacity: 0; }
+
+/* a flipekhez külön transform kell (perspektíva + tengely), ezért felülírjuk */
+.io-flip-up:not(.io-in)    { transform: perspective(var(--io-perspective)) rotateX(40deg);  }
+.io-flip-down:not(.io-in)  { transform: perspective(var(--io-perspective)) rotateX(-40deg); }
+.io-flip-left:not(.io-in)  { transform: perspective(var(--io-perspective)) rotateY(-40deg); }
+.io-flip-right:not(.io-in) { transform: perspective(var(--io-perspective)) rotateY(40deg);  }
+
+.io-flip-up.io-in,
+.io-flip-down.io-in,
+.io-flip-left.io-in,
+.io-flip-right.io-in,
+.io-flip-up.io-hover:hover,   :hover > .io-flip-up.io-hover,
+.io-flip-down.io-hover:hover, :hover > .io-flip-down.io-hover,
+.io-flip-left.io-hover:hover, :hover > .io-flip-left.io-hover,
+.io-flip-right.io-hover:hover,:hover > .io-flip-right.io-hover { transform: perspective(var(--io-perspective)) rotateX(0) rotateY(0); }
+
+/* ---- Mask / Clip reveal (2026 trend: sorok/blokkok "lehúzása") ---- */
+.io-mask-up,
+.io-mask-down,
+.io-mask-left,
+.io-mask-right { transition-property: transform, opacity, filter, clip-path; }
+
+.io-mask-up:not(.io-in)    { clip-path: inset(100% 0 0 0); }
+.io-mask-down:not(.io-in)  { clip-path: inset(0 0 100% 0); }
+.io-mask-left:not(.io-in)  { clip-path: inset(0 100% 0 0); }
+.io-mask-right:not(.io-in) { clip-path: inset(0 0 0 100%); }
+.io-mask-up.io-in,
+.io-mask-down.io-in,
+.io-mask-left.io-in,
+.io-mask-right.io-in,
+.io-mask-up.io-hover:hover,   :hover > .io-mask-up.io-hover,
+.io-mask-down.io-hover:hover, :hover > .io-mask-down.io-hover,
+.io-mask-left.io-hover:hover, :hover > .io-mask-left.io-hover,
+.io-mask-right.io-hover:hover,:hover > .io-mask-right.io-hover { clip-path: inset(0 0 0 0); }
+
+/* ---- Azonnali megjelenés (nincs scroll-trigger) ---- */
+/* a `.io-now` osztályt a JS azonnal .io-in-re állítja betöltéskor;
+   ha nincs JS, ez a fallback biztosítja a láthatóságot */
+.io-now { --io-opacity: 1; }

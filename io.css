@@ -1,0 +1,1116 @@
+/*!
+ * IO Motion v2.2.0 — utility-first CSS motion library
+ * https://github.com/iotemplates/io-motion  ·  MIT License
+ * Build: concatenated from src/ (do not edit dist directly)
+ */
+
+/* ============================================================
+   IO Motion — 01 · Design Tokens
+   Központi változók: easing, időzítés, távolság, perspektíva.
+   Minden más modul ezekre épül, így egy helyen hangolható.
+   ============================================================ */
+
+/* A reveal engine transzformáció-csatornái REGISZTRÁLT custom property-k.
+   Ez garantálja, hogy a böngésző újraszámolja az opacity/transform értéket,
+   amikor a változó az .io-in-nel megváltozik (a sima --var néha nem frissül),
+   és animálhatóvá is teszi őket. @property nélküli motorokban szimplán
+   öröklött változóként viselkednek (a reveal akkor is működik). */
+@property --io-opacity { syntax: "<number>"; inherits: false; initial-value: 1; }
+@property --io-scale   { syntax: "<number>"; inherits: false; initial-value: 1; }
+@property --io-tx      { syntax: "<length-percentage>"; inherits: false; initial-value: 0px; }
+@property --io-ty      { syntax: "<length-percentage>"; inherits: false; initial-value: 0px; }
+@property --io-tz      { syntax: "<length>"; inherits: false; initial-value: 0px; }
+@property --io-rotate  { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+@property --io-blur    { syntax: "<length>"; inherits: false; initial-value: 0px; }
+
+:root {
+  /* ---- Easing (időzítő görbék) ---- */
+  --io-ease-in:      cubic-bezier(0.55, 0.055, 0.675, 0.19);
+  --io-ease-out:     cubic-bezier(0.215, 0.61, 0.355, 1);
+  --io-ease-in-out:  cubic-bezier(0.645, 0.045, 0.355, 1);
+  --io-ease-bounce:  cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --io-ease-spring:  cubic-bezier(0.34, 1.56, 0.64, 1);   /* 2026 trend: rugós, "fizikai" érzet */
+  --io-ease-smooth:  cubic-bezier(0.22, 0.61, 0.36, 1);   /* lágy, prémium belépő */
+  --io-ease-snappy:  cubic-bezier(0.16, 1, 0.3, 1);       /* gyors start, lágy fékezés */
+
+  /* ---- Alap motion paraméterek (az engine ezeket olvassa) ---- */
+  --io-duration: 600ms;          /* alap belépő hossz */
+  --io-delay: 0ms;               /* alap késleltetés */
+  --io-ease: var(--io-ease-smooth);
+
+  /* ---- Távolság skála (slide / move effektek) ---- */
+  --io-distance: 1.5rem;         /* alap elmozdulás */
+  --io-distance-sm: 0.5rem;
+  --io-distance-md: 1.5rem;
+  --io-distance-lg: 3rem;
+  --io-distance-xl: 6rem;
+
+  /* ---- Skála / blur / rotáció alap erősség ---- */
+  --io-zoom-in-from: 0.85;
+  --io-zoom-out-from: 1.15;
+  --io-blur-from: 12px;
+  --io-rotate-from: -6deg;
+  --io-perspective: 1000px;
+
+  /* ---- Stagger (lépcsőzött belépő) ---- */
+  --io-stagger-step: 80ms;
+
+  /* ---- Hover interakció ---- */
+  --io-hover-lift: -6px;
+  --io-hover-scale: 1.05;
+  --io-hover-glow: 0 0 0 3px rgba(56, 189, 248, 0.35), 0 8px 30px rgba(56, 189, 248, 0.35);
+  --io-hover-duration: 250ms;
+}
+
+/* ============================================================
+   IO Motion — 02 · Engine
+   Két, egymást kiegészítő motor:
+
+   1) REVEAL ENGINE (.io)  →  átmenet (transition) alapú,
+      KOMBINÁLHATÓ belépők. Pl. `io io-fade io-slide-right io-zoom-in`.
+      A "kezdő állapotot" a reveal-osztályok adják (CSS változókkal),
+      a megjelenést az `.io-in` állapot kapcsolja be (JS vagy trigger).
+
+   2) MOTION ENGINE (.io-motion)  →  @keyframes alapú,
+      ismétlődő / figyelemfelkeltő animációk és a régi API.
+   ============================================================ */
+
+/* ---------- 1) REVEAL ENGINE ---------- */
+.io {
+  /* komponálható transzformáció-csatornák (alapból semleges).
+     A px egység kell a @property <length-percentage> miatt. */
+  --io-tx: 0px;
+  --io-ty: 0px;
+  --io-tz: 0px;
+  --io-rotate: 0deg;
+  --io-scale: 1;
+  --io-blur: 0px;
+  --io-opacity: 1;
+
+  transform: translate3d(var(--io-tx), var(--io-ty), var(--io-tz))
+             rotate(var(--io-rotate))
+             scale(var(--io-scale));
+  opacity: var(--io-opacity);
+  filter: blur(var(--io-blur));
+
+  transition-property: transform, opacity, filter;
+  transition-duration: var(--io-duration);
+  transition-timing-function: var(--io-ease);
+  transition-delay: var(--io-delay);
+  will-change: transform, opacity, filter;
+}
+
+/* Megjelenített (cél) állapot: minden csatorna visszaáll semlegesre.
+   Mivel a reveal-osztályok csak a kezdő értékeket állítják, az .io-in
+   egyszerre "old fel" minden kombinált effektet → tökéletesen kombinálható. */
+.io-in {
+  --io-tx: 0px;
+  --io-ty: 0px;
+  --io-tz: 0px;
+  --io-rotate: 0deg;
+  --io-scale: 1;
+  --io-blur: 0px;
+  --io-opacity: 1;
+}
+
+/* Reveal trigger: amíg nincs .io-in, rejtett/eltolt marad.
+   A `.io-reveal` és `.io-scroll` jelzi a JS-nek, hogy figyelje (IntersectionObserver). */
+.io-reveal:not(.io-in),
+.io-scroll:not(.io-in) {
+  /* a tényleges kezdőértékeket a reveal-osztályok adják (04-reveal.css) */
+}
+
+/* HOVER trigger a reveal engine-hez (kombinálható):
+   io io-fade io-slide-up io-hover   → alapból rejtett, hoverre úszik be.
+   Működik az elemen vagy a közvetlen szülőn hoverelve is. */
+.io.io-hover:hover,
+:hover > .io.io-hover {
+  --io-tx: 0px; --io-ty: 0px; --io-tz: 0px;
+  --io-rotate: 0deg; --io-scale: 1; --io-blur: 0px; --io-opacity: 1;
+}
+
+/* ---------- SCROLL-LINKED (io-scrub): a JS a görgetéshez köti ----------
+   A transform/opacity/filter értékeket a runtime állítja inline,
+   ezért itt csak az átmenetet kapcsoljuk ki (azonnal kövesse a görgetést). */
+.io-scrub {
+  transition: none !important;
+  will-change: transform, opacity, filter;
+}
+/* Szín-scrub: a szín a görgetési haladással (--io-p: 0→1) keveredik.
+   Saját színek: style="--io-scrub-from:#...; --io-scrub-to:#..." */
+.io-scrub-color {
+  color: color-mix(
+    in oklab,
+    var(--io-scrub-from, currentColor),
+    var(--io-scrub-to, #38bdf8) calc(var(--io-p, 0) * 100%)
+  );
+}
+@media (prefers-reduced-motion: reduce) {
+  .io-scrub { transform: none !important; opacity: 1 !important; filter: none !important; }
+}
+
+/* ---------- 2) MOTION ENGINE (keyframe / legacy) ---------- */
+.io-motion {
+  animation-name: var(--io-anim, none);
+  animation-fill-mode: both;
+  animation-duration: var(--io-duration);
+  animation-timing-function: var(--io-ease);
+  animation-iteration-count: 1;
+}
+
+/* ---------- Triggerek (mindkét motorhoz) ---------- */
+
+/* Hover trigger: alapból nincs animáció, hoverre indul (elemen vagy szülőn) */
+.io-motion.io-hover { animation-name: none; }
+.io-motion.io-hover:hover,
+*:hover > .io-motion.io-hover { animation-name: var(--io-anim, none); }
+
+/* Mindig fut */
+.io-motion.io-always { animation-name: var(--io-anim, none); }
+
+/* Szüneteltetés */
+.io-paused,
+.io-motion.io-paused { animation-play-state: paused; animation-name: none; }
+
+/* ---------- Akadálymentesség: csökkentett mozgás ----------
+   FONTOS: a reveal engine alapból opacity:0 / eltolt állapotból indul,
+   és a megjelenést az átmenet adja. Ha az átmenetet kikapcsoljuk,
+   a tartalom NEM tűnhet el → minden reveal-elemet expliciten láthatóvá
+   teszünk (mozgás nélkül). Ez WCAG-helyes és nem törékeny. */
+@media (prefers-reduced-motion: reduce) {
+  .io-motion,
+  [class*="io-"] {
+    animation: none !important;
+    transition-duration: 0.001ms !important;
+    transition-delay: 0ms !important;
+  }
+  /* reveal tartalom: azonnal, teljesen látható, semmi mozgás */
+  .io,
+  .io-reveal,
+  .io-scroll,
+  .io-scrub,
+  .io-words .io-w,
+  .io-chars .io-c {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    clip-path: none !important;
+  }
+}
+
+/* ============================================================
+   IO Motion — 04 · Reveal (kombinálható belépők)
+   Ezek CSAK a kezdő állapotot állítják be (CSS változókkal).
+   A megjelenést az `.io-in` kapcsolja (JS reveal vagy `.io-now`).
+   Bármelyik kettő/három szabadon kombinálható:
+
+     <div class="io io-reveal io-fade io-slide-up io-700"> … </div>
+     <div class="io io-reveal io-fade io-slide-right io-zoom-in"> … </div>
+
+   2026 trend: lágy, rövid távú elcsúszás + finom blur + opacity.
+   ============================================================ */
+
+/* ---- Opacity ---- */
+.io-fade:not(.io-in)        { --io-opacity: 0; }
+
+/* ---- Slide / Move (a kezdő pozícióból csúszik a helyére) ---- */
+.io-slide-up:not(.io-in)    { --io-ty: var(--io-distance); }                 /* alulról fel */
+.io-slide-down:not(.io-in)  { --io-ty: calc(-1 * var(--io-distance)); }      /* felülről le */
+.io-slide-left:not(.io-in)  { --io-tx: var(--io-distance); }                 /* jobbról balra */
+.io-slide-right:not(.io-in) { --io-tx: calc(-1 * var(--io-distance)); }      /* balról jobbra */
+
+/* irány-alias (mozgás iránya szerint olvasva ugyanaz) */
+.io-move-up:not(.io-in)     { --io-ty: var(--io-distance); }
+.io-move-down:not(.io-in)   { --io-ty: calc(-1 * var(--io-distance)); }
+.io-move-left:not(.io-in)   { --io-tx: var(--io-distance); }
+.io-move-right:not(.io-in)  { --io-tx: calc(-1 * var(--io-distance)); }
+
+/* ---- Zoom / Scale ---- */
+.io-zoom-in:not(.io-in)     { --io-scale: var(--io-zoom-in-from); }
+.io-zoom-out:not(.io-in)    { --io-scale: var(--io-zoom-out-from); }
+
+/* ---- Blur (2026 trend: "frosted" élesedő belépő) ---- */
+.io-blur:not(.io-in)        { --io-blur: var(--io-blur-from); }
+
+/* ---- Rotate / Tilt belépő ---- */
+.io-rotate-in:not(.io-in)   { --io-rotate: var(--io-rotate-from); }
+.io-rotate-in-r:not(.io-in) { --io-rotate: calc(-1 * var(--io-rotate-from)); }
+
+/* ---- Flip (3D) ---- */
+.io-flip-up,
+.io-flip-down,
+.io-flip-left,
+.io-flip-right { transform-style: preserve-3d; }
+
+.io-flip-up:not(.io-in),
+.io-flip-down:not(.io-in),
+.io-flip-left:not(.io-in),
+.io-flip-right:not(.io-in) { --io-opacity: 0; }
+
+/* a flipekhez külön transform kell (perspektíva + tengely), ezért felülírjuk */
+.io-flip-up:not(.io-in)    { transform: perspective(var(--io-perspective)) rotateX(40deg);  }
+.io-flip-down:not(.io-in)  { transform: perspective(var(--io-perspective)) rotateX(-40deg); }
+.io-flip-left:not(.io-in)  { transform: perspective(var(--io-perspective)) rotateY(-40deg); }
+.io-flip-right:not(.io-in) { transform: perspective(var(--io-perspective)) rotateY(40deg);  }
+
+.io-flip-up.io-in,
+.io-flip-down.io-in,
+.io-flip-left.io-in,
+.io-flip-right.io-in,
+.io-flip-up.io-hover:hover,   :hover > .io-flip-up.io-hover,
+.io-flip-down.io-hover:hover, :hover > .io-flip-down.io-hover,
+.io-flip-left.io-hover:hover, :hover > .io-flip-left.io-hover,
+.io-flip-right.io-hover:hover,:hover > .io-flip-right.io-hover { transform: perspective(var(--io-perspective)) rotateX(0) rotateY(0); }
+
+/* ---- Mask / Clip reveal (2026 trend: sorok/blokkok "lehúzása") ---- */
+.io-mask-up,
+.io-mask-down,
+.io-mask-left,
+.io-mask-right { transition-property: transform, opacity, filter, clip-path; }
+
+.io-mask-up:not(.io-in)    { clip-path: inset(100% 0 0 0); }
+.io-mask-down:not(.io-in)  { clip-path: inset(0 0 100% 0); }
+.io-mask-left:not(.io-in)  { clip-path: inset(0 100% 0 0); }
+.io-mask-right:not(.io-in) { clip-path: inset(0 0 0 100%); }
+.io-mask-up.io-in,
+.io-mask-down.io-in,
+.io-mask-left.io-in,
+.io-mask-right.io-in,
+.io-mask-up.io-hover:hover,   :hover > .io-mask-up.io-hover,
+.io-mask-down.io-hover:hover, :hover > .io-mask-down.io-hover,
+.io-mask-left.io-hover:hover, :hover > .io-mask-left.io-hover,
+.io-mask-right.io-hover:hover,:hover > .io-mask-right.io-hover { clip-path: inset(0 0 0 0); }
+
+/* ---- Azonnali megjelenés (nincs scroll-trigger) ---- */
+/* a `.io-now` osztályt a JS azonnal .io-in-re állítja betöltéskor;
+   ha nincs JS, ez a fallback biztosítja a láthatóságot */
+.io-now { --io-opacity: 1; }
+
+/* ============================================================
+   IO Motion — 05 · Attention (figyelemfelkeltő / ciklikus)
+   Önállóan is működnek:  <span class="io-pulse"></span>
+   Hover-re indítva:       <span class="io-motion io-shake io-hover"></span>
+   Sebesség:               io-700 / io-1000 …   Ismétlés: io-once / io-infinite
+   ============================================================ */
+
+/* Önálló (io-motion nélküli) használatkor azonnal futnak.
+   io-motion mellett a trigger-rendszer (io-hover / io-always) vezérli őket. */
+:not(.io-motion).io-pulse,
+:not(.io-motion).io-bounce,
+:not(.io-motion).io-shake,
+:not(.io-motion).io-wobble,
+:not(.io-motion).io-jello,
+:not(.io-motion).io-vibrate,
+:not(.io-motion).io-swing,
+:not(.io-motion).io-heartbeat,
+:not(.io-motion).io-float,
+:not(.io-motion).io-spin,
+:not(.io-motion).io-ping,
+:not(.io-motion).io-rubber,
+:not(.io-motion).io-tada,
+:not(.io-motion).io-flash {
+  animation-name: var(--io-anim);
+  animation-duration: var(--io-duration);
+  animation-timing-function: var(--io-ease);
+  animation-fill-mode: both;
+}
+
+.io-pulse     { --io-anim: io-pulse;     --io-duration: 1500ms; animation-iteration-count: infinite; }
+.io-heartbeat { --io-anim: io-heartbeat; --io-duration: 1300ms; animation-iteration-count: infinite; }
+.io-float     { --io-anim: io-float;     --io-duration: 3000ms; --io-ease: var(--io-ease-in-out); animation-iteration-count: infinite; }
+.io-spin      { --io-anim: io-spin;      --io-duration: 1000ms; --io-ease: linear; animation-iteration-count: infinite; }
+.io-ping      { --io-anim: io-ping;      --io-duration: 1200ms; --io-ease: var(--io-ease-out); animation-iteration-count: infinite; }
+.io-flash     { --io-anim: io-flash;     --io-duration: 1600ms; animation-iteration-count: infinite; }
+
+.io-bounce    { --io-anim: io-bounce;    --io-duration: 900ms;  animation-iteration-count: 1; }
+.io-shake     { --io-anim: io-shake;     --io-duration: 600ms;  animation-iteration-count: 1; }
+.io-wobble    { --io-anim: io-wobble;    --io-duration: 900ms;  animation-iteration-count: 1; }
+.io-jello     { --io-anim: io-jello;     --io-duration: 900ms;  animation-iteration-count: 1; }
+.io-vibrate   { --io-anim: io-vibrate;   --io-duration: 400ms;  --io-ease: linear; animation-iteration-count: 1; }
+.io-swing     { --io-anim: io-swing;     --io-duration: 900ms;  transform-origin: top center; animation-iteration-count: 1; }
+.io-rubber    { --io-anim: io-rubber;    --io-duration: 900ms;  animation-iteration-count: 1; }
+.io-tada      { --io-anim: io-tada;      --io-duration: 1000ms; animation-iteration-count: 1; }
+
+/* ---------- Keyframes ---------- */
+@keyframes io-pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.08); }
+}
+@keyframes io-heartbeat {
+  0%, 100% { transform: scale(1); }
+  10%, 30% { transform: scale(0.92); }
+  20%, 40% { transform: scale(1.12); }
+}
+@keyframes io-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-12px); }
+}
+@keyframes io-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes io-ping {
+  0%   { transform: scale(1);   opacity: 1; }
+  75%, 100% { transform: scale(1.8); opacity: 0; }
+}
+@keyframes io-flash {
+  0%, 50%, 100% { opacity: 1; }
+  25%, 75%      { opacity: 0.25; }
+}
+@keyframes io-bounce {
+  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-26px); }
+  60% { transform: translateY(-13px); }
+}
+@keyframes io-shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-9px); }
+  20%, 40%, 60%, 80%      { transform: translateX(9px); }
+}
+@keyframes io-wobble {
+  0%, 100% { transform: translateX(0); }
+  15% { transform: translateX(-22px) rotate(-5deg); }
+  30% { transform: translateX(18px)  rotate(3deg); }
+  45% { transform: translateX(-13px) rotate(-3deg); }
+  60% { transform: translateX(9px)   rotate(2deg); }
+  75% { transform: translateX(-5px)  rotate(-1deg); }
+}
+@keyframes io-jello {
+  0%, 100% { transform: scale3d(1, 1, 1); }
+  30% { transform: scale3d(1.25, 0.75, 1); }
+  40% { transform: scale3d(0.75, 1.25, 1); }
+  50% { transform: scale3d(1.15, 0.85, 1); }
+  65% { transform: scale3d(0.95, 1.05, 1); }
+  75% { transform: scale3d(1.05, 0.95, 1); }
+}
+@keyframes io-vibrate {
+  0%,100% { transform: translate(0); }
+  20% { transform: translate(-2px, 2px); }
+  40% { transform: translate(-2px, -2px); }
+  60% { transform: translate(2px, 2px); }
+  80% { transform: translate(2px, -2px); }
+}
+@keyframes io-swing {
+  20% { transform: rotate(15deg); }
+  40% { transform: rotate(-10deg); }
+  60% { transform: rotate(5deg); }
+  80% { transform: rotate(-5deg); }
+  100% { transform: rotate(0deg); }
+}
+@keyframes io-rubber {
+  0%   { transform: scale3d(1, 1, 1); }
+  30%  { transform: scale3d(1.25, 0.75, 1); }
+  40%  { transform: scale3d(0.75, 1.25, 1); }
+  50%  { transform: scale3d(1.15, 0.85, 1); }
+  65%  { transform: scale3d(0.95, 1.05, 1); }
+  75%  { transform: scale3d(1.05, 0.95, 1); }
+  100% { transform: scale3d(1, 1, 1); }
+}
+@keyframes io-tada {
+  0%   { transform: scale3d(1,1,1); }
+  10%,20% { transform: scale3d(0.9,0.9,0.9) rotate(-3deg); }
+  30%,50%,70%,90% { transform: scale3d(1.1,1.1,1.1) rotate(3deg); }
+  40%,60%,80% { transform: scale3d(1.1,1.1,1.1) rotate(-3deg); }
+  100% { transform: scale3d(1,1,1); }
+}
+
+/* ============================================================
+   IO Motion — 06 · Text (szöveg-mozgás, 2026 trendek)
+   - Kinetikus belépők (tracking / focus-in)
+   - Animált gradiens & shimmer szöveg
+   - Szavankénti / betűnkénti, lépcsőzött reveal (JS bontja szét)
+   ============================================================ */
+
+/* ---- Kinetikus belépők (egyszeri, hoverre vagy reveal-re) ---- */
+.io-tracking-in { --io-anim: io-tracking-in; }
+.io-focus-in    { --io-anim: io-focus-in; }
+.io-text-pop    { --io-anim: io-text-pop; }
+
+:not(.io-motion).io-tracking-in,
+:not(.io-motion).io-focus-in,
+:not(.io-motion).io-text-pop {
+  animation-name: var(--io-anim);
+  animation-duration: var(--io-duration);
+  animation-timing-function: var(--io-ease);
+  animation-fill-mode: both;
+  animation-iteration-count: 1;
+}
+
+@keyframes io-tracking-in {
+  0%   { letter-spacing: -0.5em; opacity: 0; }
+  40%  { opacity: 0.6; }
+  100% { letter-spacing: normal; opacity: 1; }
+}
+@keyframes io-focus-in {
+  0%   { letter-spacing: -0.4em; filter: blur(12px); opacity: 0; }
+  100% { letter-spacing: normal; filter: blur(0); opacity: 1; }
+}
+@keyframes io-text-pop {
+  0%   { transform: scale(0.8) translateY(0.2em); opacity: 0; }
+  60%  { transform: scale(1.04); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+/* ---- Animált gradiens szöveg (folyamatos) ---- */
+.io-gradient-text {
+  background-image: linear-gradient(
+    90deg,
+    var(--io-grad-1, #0ea5e9),
+    var(--io-grad-2, #a855f7),
+    var(--io-grad-3, #f43f5e),
+    var(--io-grad-1, #0ea5e9)
+  );
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  /* saját sebesség-változó, hogy a belépő io-NNN ne tegye strobossá */
+  animation: io-gradient-flow var(--io-text-duration, 6000ms) linear infinite;
+}
+@keyframes io-gradient-flow {
+  to { background-position: 300% 50%; }
+}
+
+/* ---- Shimmer (fény végigfut a szövegen) ---- */
+.io-shimmer-text {
+  /* Fénycsóva fut végig a szövegen.
+     Állítható: --io-shimmer-base (alapszín) és --io-shimmer-hi (csóva színe).
+     FONTOS: explicit base kell, mert a color:transparent miatt a currentColor
+     itt átlátszó lenne → a régi color-mix-es változat nem látszott. */
+  --io-shimmer-base: #64748b;   /* slate-500: sötét háttéren jól látszik */
+  --io-shimmer-hi: #ffffff;
+  background-image: linear-gradient(
+    100deg,
+    var(--io-shimmer-base) 0%,
+    var(--io-shimmer-base) 42%,
+    var(--io-shimmer-hi) 50%,
+    var(--io-shimmer-base) 58%,
+    var(--io-shimmer-base) 100%
+  );
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: io-shimmer-text var(--io-text-duration, 2500ms) linear infinite;
+}
+@keyframes io-shimmer-text {
+  /* A pozíció a 0%–100% tartományban marad: a 200%-os, no-repeat gradiens
+     így VÉGIG fedi a szöveget → a betűk soha nem tűnnek el, csak a fénycsóva
+     fut át rajtuk. */
+  0%   { background-position: 100% 0; }
+  100% { background-position: 0% 0; }
+}
+
+/* ---- Typewriter (gépelős) ---- */
+.io-typewriter {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  border-right: 2px solid currentColor;
+  width: 0;
+  animation:
+    io-typewriter var(--io-duration, 2500ms) steps(var(--io-tw-steps, 24)) forwards,
+    io-caret 750ms step-end infinite;
+}
+@keyframes io-typewriter { to { width: 100%; } }
+@keyframes io-caret { 50% { border-color: transparent; } }
+
+/* ---- Szavankénti / betűnkénti reveal (a JS bontja .io-w / .io-c spanekre) ---- */
+.io-words .io-w,
+.io-chars .io-c {
+  display: inline-block;
+  white-space: pre;          /* a szóközök megmaradnak */
+}
+
+/* ---- Animált aláhúzás (io-underline) ----
+   Az aláhúzás balról jobbra behúzódik. Önállóan egyszer lejátszik;
+   a demóban hoverre újraindul (animation-restart). Szín: --io-underline-color. */
+.io-underline {
+  position: relative;
+  display: inline-block;
+}
+.io-underline::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -0.08em;
+  height: 0.08em;
+  width: 100%;
+  background: var(--io-underline-color, currentColor);
+  border-radius: 2px;
+  transform: scaleX(0);
+  transform-origin: left center;
+  animation: io-underline var(--io-duration, 900ms) var(--io-ease, cubic-bezier(0.22,0.61,0.36,1)) both;
+}
+@keyframes io-underline {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+/* ---- Görgetés-aláhúzás (io-scrub-underline) ----
+   A vonal a görgetési haladással (--io-p: 0→1) húzódik balról jobbra. */
+.io-scrub-underline {
+  position: relative;
+  display: inline-block;
+}
+.io-scrub-underline::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -0.08em;
+  height: 0.08em;
+  width: 100%;
+  background: var(--io-underline-color, currentColor);
+  border-radius: 2px;
+  transform: scaleX(var(--io-p, 0));
+  transform-origin: left center;
+}
+
+/* ---- Görgetésre felugró/beúszó szöveg, szavanként/betűnként ----
+   A JS bontja .io-sw / .io-sc spanekre, és spanenként állítja a --io-p-t.
+   Az irányt a io-slide-* / io-fade / io-zoom-* osztályok adják (kombinálható). */
+.io-scrub-words .io-sw,
+.io-scrub-chars .io-sc {
+  display: inline-block;
+  white-space: pre;
+  will-change: transform, opacity;
+}
+
+/* ---- Folyamatos szöveg-effektek sebessége (gradient / shimmer) ---- */
+.io-text-slow   { --io-text-duration: 9s; }
+.io-text-normal { --io-text-duration: 6s; }
+.io-text-fast   { --io-text-duration: 3s; }
+
+/* A folyamatos szöveg-effektek sebességét NE írja felül a belépő io-NNN /
+   io-fast/io-slow duration-módosító. Dupla osztály → magasabb specificitás,
+   mint a módosítóké, így az --io-text-duration marad érvényben. */
+.io-gradient-text.io-gradient-text { animation-duration: var(--io-text-duration, 6s); }
+.io-shimmer-text.io-shimmer-text   { animation-duration: var(--io-text-duration, 2.5s); }
+
+/* ---- Gradiens szöveg színpaletták (kombinálható: io-gradient-text io-grad-sunset) ----
+   Saját színekhez állítsd a --io-grad-1/2/3 változókat inline style-ban. */
+.io-grad-aurora { --io-grad-1: #0ea5e9; --io-grad-2: #a855f7; --io-grad-3: #22c55e; }
+.io-grad-sunset { --io-grad-1: #f59e0b; --io-grad-2: #f43f5e; --io-grad-3: #a855f7; }
+.io-grad-ocean  { --io-grad-1: #22d3ee; --io-grad-2: #2563eb; --io-grad-3: #0ea5e9; }
+.io-grad-mint   { --io-grad-1: #10b981; --io-grad-2: #a3e635; --io-grad-3: #10b981; }
+.io-grad-fire   { --io-grad-1: #f97316; --io-grad-2: #ef4444; --io-grad-3: #f59e0b; }
+.io-grad-candy  { --io-grad-1: #ec4899; --io-grad-2: #a855f7; --io-grad-3: #ec4899; }
+.io-grad-gold   { --io-grad-1: #fde047; --io-grad-2: #f59e0b; --io-grad-3: #fde047; }
+
+/* ============================================================
+   IO Motion — 07 · Hover & Interakció
+   Önálló utilityk (nem kell .io / .io-motion).
+   Kombinálhatók egymással: io-hover-lift io-hover-glow
+   ============================================================ */
+
+[class*="io-hover-"] {
+  transition-property: transform, box-shadow, filter, background-position, color;
+  transition-duration: var(--io-hover-duration);
+  transition-timing-function: var(--io-ease-smooth);
+}
+
+/* Emelkedés */
+.io-hover-lift:hover   { transform: translateY(var(--io-hover-lift)); }
+/* Növekedés / zsugorodás */
+.io-hover-grow:hover   { transform: scale(var(--io-hover-scale)); }
+.io-hover-shrink:hover { transform: scale(0.95); }
+/* Döntés / forgatás */
+.io-hover-rotate:hover { transform: rotate(4deg); }
+.io-hover-tilt:hover   { transform: perspective(600px) rotateX(6deg) rotateY(-6deg); }
+/* Glow / ragyogás */
+.io-hover-glow:hover   { box-shadow: var(--io-hover-glow); }
+/* Lebegés (emelés + árnyék) */
+.io-hover-float:hover  { transform: translateY(-6px); box-shadow: 0 18px 40px -12px rgba(0,0,0,0.35); }
+/* Push (megnyomás) */
+.io-hover-press:active { transform: scale(0.96); }
+
+/* Kombinált gyakori páros: lift + glow */
+.io-hover-pop:hover {
+  transform: translateY(-4px) scale(1.03);
+  box-shadow: 0 16px 40px -14px rgba(0,0,0,0.4);
+}
+
+/* Aláhúzás kibújás (linkekhez) */
+.io-hover-underline {
+  position: relative;
+}
+.io-hover-underline::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  width: 100%;
+  height: 2px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--io-hover-duration) var(--io-ease-smooth);
+}
+.io-hover-underline:hover::after { transform: scaleX(1); }
+
+/* Fény-sweep (gombokra): áthúzódó csillanás */
+.io-hover-sweep {
+  position: relative;
+  overflow: hidden;
+}
+.io-hover-sweep::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 80%;
+  height: 100%;
+  background: linear-gradient(
+    100deg,
+    transparent,
+    rgba(255, 255, 255, 0.45),
+    transparent
+  );
+  transform: skewX(-20deg);
+  transition: left 600ms var(--io-ease-out);
+}
+.io-hover-sweep:hover::before { left: 140%; }
+
+/* Border-reveal gomb (háttér kitöltés balról) */
+.io-hover-border {
+  position: relative;
+  overflow: hidden;
+  z-index: 0;
+  border: 2px solid currentColor;
+  background-color: transparent;
+}
+.io-hover-border::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 0%;
+  background-color: currentColor;
+  transition: width var(--io-hover-duration) var(--io-ease-out);
+  z-index: -1;
+}
+.io-hover-border:hover::after { width: 100%; }
+
+/* Magnetic + 3D tilt: a JS állítja a --io-mx/--io-my változókat.
+   Itt csak a transform-csatorna van előkészítve. */
+.io-magnetic,
+.io-tilt {
+  transition: transform 200ms var(--io-ease-out);
+  transform: translate(var(--io-mx, 0px), var(--io-my, 0px))
+             rotateX(var(--io-rx, 0deg)) rotateY(var(--io-ry, 0deg));
+  transform-style: preserve-3d;
+}
+
+/* ============================================================
+   IO Motion — 08 · Motion Path (CSS offset-path)
+   Egy elem előre megadott útvonalon mozog.
+   MDN: offset-path / offset-distance / offset-rotate
+   ============================================================ */
+
+@supports (offset-path: path("M 0 0 L 1 1")) {
+
+  .io-path {
+    position: absolute;
+    offset-distance: 0%;
+    offset-rotate: auto;
+    offset-anchor: 50% 50%;
+  }
+
+  /* az animáció ugyanabba a motion engine-be megy (--io-anim) */
+  .io-path-move { --io-anim: io-path-move; }
+  .io-path-yoyo { --io-anim: io-path-move; animation-direction: alternate; }
+
+  :not(.io-motion).io-path-move,
+  :not(.io-motion).io-path-yoyo {
+    animation-name: var(--io-anim);
+    animation-duration: var(--io-duration);
+    animation-timing-function: var(--io-ease);
+    animation-fill-mode: both;
+    animation-iteration-count: 1;
+  }
+
+  /* rotáció az útvonal mentén */
+  .io-path-rotate-auto    { offset-rotate: auto; }
+  .io-path-rotate-0       { offset-rotate: 0deg; }
+  .io-path-rotate-reverse { offset-rotate: auto 180deg; }
+
+  /* útvonal presetek (300×150 stage-re hangolva) */
+  .io-path-line  { offset-path: path("M 10 75 L 290 75"); }
+  .io-path-arc   { offset-path: path("M 10 110 C 90 10, 210 10, 290 110"); }
+  .io-path-wave  { offset-path: path("M 10 75 C 55 15, 100 135, 145 75 C 190 15, 235 135, 280 75"); }
+  .io-path-loop  { offset-path: path("M 150 20 C 230 20, 290 55, 290 75 C 290 110, 230 130, 150 130 C 70 130, 10 110, 10 75 C 10 55, 70 20, 150 20"); }
+  .io-path-heart { offset-path: path("M 150 120 C 105 95, 60 60, 85 35 C 105 15, 135 25, 150 45 C 165 25, 195 15, 215 35 C 240 60, 195 95, 150 120"); }
+
+  @keyframes io-path-move { to { offset-distance: 100%; } }
+}
+
+/* segéd a demóhoz (stage + pötty) */
+.io-path-stage { position: relative; width: 300px; height: 150px; border-radius: 8px; }
+.io-path-dot   { width: 14px; height: 14px; border-radius: 999px; }
+
+/* ============================================================
+   IO Motion — 09 · Effects
+   Speciális, "látványos" effektek: confetti, kép/háttér mozgás,
+   marquee, skeleton shimmer.
+   ============================================================ */
+
+/* ---------- Confetti (CSS-only burst, JS tölti fel a pöttyökkel) ---------- */
+.io-confetti {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.io-confetti__spots {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.io-confetti__spot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  transform: translate(-50%, -50%) scale(0.8);
+  opacity: 0;
+  --dx: 0px; --dy: -80px; --delay: 0ms; --dur: 800ms; --hue: 200;
+  background: hsl(var(--hue) 90% 60%);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.12);
+}
+.io-confetti:hover .io-confetti__spot,
+*:hover > .io-confetti .io-confetti__spot {
+  animation: io-confetti-burst var(--dur) cubic-bezier(0.39, 2.01, 0.27, 0.75) var(--delay) both;
+}
+@keyframes io-confetti-burst {
+  0%   { transform: translate(-50%, -50%) translate(0, 0) rotate(0deg) scale(0.6); opacity: 0; }
+  15%  { opacity: 1; }
+  100% { transform: translate(-50%, -50%) translate(var(--dx), var(--dy)) rotate(360deg) scale(1); opacity: 0; }
+}
+/* előre kiosztott irányok / színek / késleltetések (24 pötty) */
+.io-confetti__spot:nth-child(1)  { --dx: -70px; --dy: -40px; --delay:  0ms; --dur: 700ms; --hue: 200; }
+.io-confetti__spot:nth-child(2)  { --dx: -55px; --dy: -85px; --delay: 30ms; --dur: 850ms; --hue: 35; }
+.io-confetti__spot:nth-child(3)  { --dx: -25px; --dy: -95px; --delay: 60ms; --dur: 900ms; --hue: 320; }
+.io-confetti__spot:nth-child(4)  { --dx:  10px; --dy: -105px; --delay: 10ms; --dur: 820ms; --hue: 160; }
+.io-confetti__spot:nth-child(5)  { --dx:  45px; --dy: -90px; --delay: 50ms; --dur: 880ms; --hue: 10; }
+.io-confetti__spot:nth-child(6)  { --dx:  75px; --dy: -55px; --delay: 20ms; --dur: 760ms; --hue: 265; }
+.io-confetti__spot:nth-child(7)  { --dx: -90px; --dy:  10px; --delay: 80ms; --dur: 900ms; --hue: 210; }
+.io-confetti__spot:nth-child(8)  { --dx: -70px; --dy:  40px; --delay: 40ms; --dur: 820ms; --hue: 45; }
+.io-confetti__spot:nth-child(9)  { --dx: -40px; --dy:  65px; --delay: 90ms; --dur: 880ms; --hue: 300; }
+.io-confetti__spot:nth-child(10) { --dx:  -5px; --dy:  80px; --delay: 60ms; --dur: 920ms; --hue: 170; }
+.io-confetti__spot:nth-child(11) { --dx:  35px; --dy:  70px; --delay: 30ms; --dur: 840ms; --hue: 25; }
+.io-confetti__spot:nth-child(12) { --dx:  70px; --dy:  45px; --delay:100ms; --dur: 940ms; --hue: 250; }
+.io-confetti__spot:nth-child(13) { --dx: -85px; --dy: -10px; --delay: 20ms; --dur: 780ms; --hue: 190; }
+.io-confetti__spot:nth-child(14) { --dx: -60px; --dy:  15px; --delay: 70ms; --dur: 860ms; --hue: 60; }
+.io-confetti__spot:nth-child(15) { --dx: -30px; --dy:  25px; --delay: 10ms; --dur: 820ms; --hue: 330; }
+.io-confetti__spot:nth-child(16) { --dx:  20px; --dy:  30px; --delay: 50ms; --dur: 860ms; --hue: 140; }
+.io-confetti__spot:nth-child(17) { --dx:  55px; --dy:  20px; --delay: 90ms; --dur: 920ms; --hue: 15; }
+.io-confetti__spot:nth-child(18) { --dx:  90px; --dy:  -5px; --delay: 40ms; --dur: 800ms; --hue: 270; }
+.io-confetti__spot:nth-child(19) { --dx: -45px; --dy: -20px; --delay:110ms; --dur: 880ms; --hue: 205; }
+.io-confetti__spot:nth-child(20) { --dx: -15px; --dy: -35px; --delay: 60ms; --dur: 760ms; --hue: 40; }
+.io-confetti__spot:nth-child(21) { --dx:  15px; --dy: -40px; --delay: 30ms; --dur: 820ms; --hue: 310; }
+.io-confetti__spot:nth-child(22) { --dx:  40px; --dy: -28px; --delay: 90ms; --dur: 900ms; --hue: 165; }
+.io-confetti__spot:nth-child(23) { --dx:  20px; --dy: -75px; --delay:120ms; --dur: 960ms; --hue: 5; }
+.io-confetti__spot:nth-child(24) { --dx: -20px; --dy: -70px; --delay: 80ms; --dur: 920ms; --hue: 255; }
+
+/* ---------- Kép / háttér mozgás ---------- */
+.io-kenburns   { --io-anim: io-kenburns; }
+.io-bg-pan     { --io-anim: io-bg-pan; }
+.io-color-cycle{ --io-anim: io-color-cycle; }
+
+:not(.io-motion).io-kenburns,
+:not(.io-motion).io-bg-pan,
+:not(.io-motion).io-color-cycle {
+  animation-name: var(--io-anim);
+  animation-duration: var(--io-duration);
+  animation-timing-function: var(--io-ease-in-out);
+  animation-fill-mode: both;
+  animation-iteration-count: infinite;
+}
+.io-kenburns  { --io-duration: 8000ms; animation-direction: alternate; }
+.io-bg-pan    { --io-duration: 6000ms; --io-ease: linear; }
+.io-color-cycle { --io-duration: 4000ms; }
+
+@keyframes io-kenburns {
+  0%   { transform: scale(1) translateY(0); transform-origin: 50% 16%; }
+  100% { transform: scale(1.18) translateY(-12px); transform-origin: top; }
+}
+@keyframes io-bg-pan {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
+@keyframes io-color-cycle {
+  0%   { filter: hue-rotate(0deg); }
+  100% { filter: hue-rotate(360deg); }
+}
+
+/* ---------- Marquee (végtelen szalag) ---------- */
+.io-marquee {
+  display: flex;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.io-marquee > * {
+  flex: 0 0 auto;
+  animation: io-marquee var(--io-duration, 18s) linear infinite;
+}
+.io-marquee:hover > * { animation-play-state: paused; }
+@keyframes io-marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-100%); }
+}
+
+/* ---------- Skeleton shimmer (töltődő tartalom) ---------- */
+.io-skeleton {
+  background: linear-gradient(100deg, #e2e8f0 30%, #f1f5f9 50%, #e2e8f0 70%);
+  background-size: 200% 100%;
+  animation: io-skeleton 1500ms ease-in-out infinite;
+  border-radius: 8px;
+}
+@keyframes io-skeleton {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+
+/* ============================================================
+   IO Motion — 20 · Legacy (visszafelé kompatibilitás)
+   A korábbi (v1.x) osztályok és gombok változatlanul élnek tovább,
+   hogy a régi markup és a meglévő demó ne törjön.
+   Ezek mind a MOTION engine-t használják: kell melléjük .io-motion.
+   Új projektben a 04-reveal kombinálható belépőit ajánljuk helyettük.
+   ============================================================ */
+
+/* ---- Entrance osztályok (keyframe, --io-anim) ---- */
+.io-fade-in   { --io-anim: io-fade-in; }
+.io-fade-out  { --io-anim: io-fade-out; }
+.io-scale-up   { --io-anim: io-scale-up; }
+.io-scale-down { --io-anim: io-scale-down; }
+.io-rotate    { --io-anim: io-rotate; }
+.io-slide-in-left  { --io-anim: io-slide-in-left; }
+.io-slide-in-right { --io-anim: io-slide-in-right; }
+.io-slide-in-up    { --io-anim: io-slide-in-up; }
+.io-slide-in-down  { --io-anim: io-slide-in-down; }
+.io-flip-x { --io-anim: io-flip-x; }
+.io-flip-y { --io-anim: io-flip-y; }
+
+/* ---- "Gradienty-inspired" csomag ---- */
+.io-vibrate-1            { --io-anim: io-vibrate-1; }
+.io-jello-horizontal     { --io-anim: io-jello-horizontal; }
+.io-wobble-hor-bottom    { --io-anim: io-wobble-hor-bottom; }
+.io-bounce-top           { --io-anim: io-bounce-top; }
+.io-tracking-in-expand   { --io-anim: io-tracking-in-expand; }
+.io-focus-in-expand      { --io-anim: io-focus-in-expand; }
+.io-slide-in-blurred-left{ --io-anim: io-slide-in-blurred-left; }
+.io-roll-in-left         { --io-anim: io-roll-in-left; }
+.io-scale-in-center      { --io-anim: io-scale-in-center; }
+.io-kenburns-top         { --io-anim: io-kenburns-top; }
+.io-bg-pan-left          { --io-anim: io-bg-pan-left; }
+.io-color-change-2x      { --io-anim: io-color-change-2x; }
+
+/* ---- Keyframes ---- */
+@keyframes io-fade-in  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes io-fade-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes io-scale-up   { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes io-scale-down { from { transform: scale(1); opacity: 1; } to { transform: scale(0); opacity: 0; } }
+@keyframes io-rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes io-slide-in-left  { from { transform: translateX(-100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes io-slide-in-right { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes io-slide-in-up    { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes io-slide-in-down  { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes io-flip-x { from { transform: perspective(400px) rotateX(90deg); opacity: 0; } to { transform: perspective(400px) rotateX(0deg); opacity: 1; } }
+@keyframes io-flip-y { from { transform: perspective(400px) rotateY(90deg); opacity: 0; } to { transform: perspective(400px) rotateY(0deg); opacity: 1; } }
+
+@keyframes io-vibrate-1 {
+  0% { transform: translate(0); }
+  20% { transform: translate(-2px, 2px); }
+  40% { transform: translate(-2px, -2px); }
+  60% { transform: translate(2px, 2px); }
+  80% { transform: translate(2px, -2px); }
+  100% { transform: translate(0); }
+}
+@keyframes io-jello-horizontal {
+  0% { transform: scale3d(1, 1, 1); }
+  30% { transform: scale3d(1.25, 0.75, 1); }
+  40% { transform: scale3d(0.75, 1.25, 1); }
+  50% { transform: scale3d(1.15, 0.85, 1); }
+  65% { transform: scale3d(0.95, 1.05, 1); }
+  75% { transform: scale3d(1.05, 0.95, 1); }
+  100% { transform: scale3d(1, 1, 1); }
+}
+@keyframes io-wobble-hor-bottom {
+  0% { transform: translateX(0); transform-origin: 50% 50%; }
+  15% { transform: translateX(-30px) rotate(-6deg); }
+  30% { transform: translateX(15px) rotate(6deg); }
+  45% { transform: translateX(-15px) rotate(-3.6deg); }
+  60% { transform: translateX(9px) rotate(2.4deg); }
+  75% { transform: translateX(-6px) rotate(-1.2deg); }
+  100% { transform: translateX(0); }
+}
+@keyframes io-bounce-top {
+  0% { transform: translateY(-45px); animation-timing-function: ease-in; opacity: 0; }
+  24% { opacity: 1; }
+  40% { transform: translateY(-24px); animation-timing-function: ease-in; }
+  65% { transform: translateY(-12px); animation-timing-function: ease-in; }
+  82% { transform: translateY(-6px); animation-timing-function: ease-in; }
+  93% { transform: translateY(-4px); animation-timing-function: ease-in; }
+  25%, 55%, 75%, 87% { transform: translateY(0); animation-timing-function: ease-out; }
+  100% { transform: translateY(0); animation-timing-function: ease-out; }
+}
+@keyframes io-tracking-in-expand {
+  0% { letter-spacing: -0.5em; opacity: 0; }
+  40% { opacity: 0.6; }
+  100% { letter-spacing: normal; opacity: 1; }
+}
+@keyframes io-focus-in-expand {
+  0% { letter-spacing: -0.5em; filter: blur(12px); opacity: 0; }
+  100% { filter: blur(0); opacity: 1; }
+}
+@keyframes io-slide-in-blurred-left {
+  0% { transform: translateX(-1000px) scaleX(2.5) scaleY(0.2); transform-origin: 100% 50%; filter: blur(40px); opacity: 0; }
+  100% { transform: translateX(0) scaleX(1) scaleY(1); transform-origin: 50% 50%; filter: blur(0); opacity: 1; }
+}
+@keyframes io-roll-in-left {
+  0% { transform: translateX(-800px) rotate(-540deg); opacity: 0; }
+  100% { transform: translateX(0) rotate(0deg); opacity: 1; }
+}
+@keyframes io-scale-in-center {
+  0% { transform: scale(0); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes io-kenburns-top {
+  0% { transform: scale(1) translateY(0); transform-origin: 50% 16%; }
+  100% { transform: scale(1.25) translateY(-15px); transform-origin: top; }
+}
+@keyframes io-bg-pan-left {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+@keyframes io-color-change-2x {
+  0% { background-color: #0ea5e9; }
+  50% { background-color: #a855f7; }
+  100% { background-color: #0ea5e9; }
+}
+
+/* ---- Régi gombok ---- */
+.btn {
+  padding: 10px 20px;
+  margin: 10px;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.3s ease;
+}
+.io-btn-pulse { --io-anim: io-btn-pulse; }
+@keyframes io-btn-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+.io-btn-wobble { --io-anim: io-btn-wobble; }
+@keyframes io-btn-wobble {
+  0%, 100% { transform: translateX(0%); }
+  15% { transform: translateX(-25%) rotate(-5deg); }
+  30% { transform: translateX(20%) rotate(3deg); }
+  45% { transform: translateX(-15%) rotate(-3deg); }
+  60% { transform: translateX(10%) rotate(2deg); }
+  75% { transform: translateX(-5%) rotate(-1deg); }
+}
+.io-btn-rotate-3d { --io-anim: io-btn-rotate-3d; transform-style: preserve-3d; }
+@keyframes io-btn-rotate-3d {
+  0%   { transform: perspective(300px) rotateX(0deg); }
+  50%  { transform: perspective(300px) rotateX(180deg); }
+  100% { transform: perspective(300px) rotateX(360deg); }
+}
+.io-btn-border-reveal {
+  background-color: transparent;
+  color: #9b59b6;
+  border: 2px solid #9b59b6;
+  position: relative;
+  overflow: hidden;
+  z-index: 0;
+}
+.io-btn-border-reveal::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 0%;
+  background-color: #9b59b6;
+  transition: width 0.3s ease;
+  z-index: -1;
+}
+.io-btn-border-reveal:hover::after { width: 100%; }
+.io-btn-border-reveal:hover { color: #fff; }
+
+/* ============================================================
+   IO Motion — 03 · Modifiers (kombinálható módosítók)
+   Mindegyik egyszerre hangolja a REVEAL és a MOTION motort,
+   így ugyanaz az osztály mindkét rendszerben működik.
+   Pl.  io io-fade io-slide-up io-700 io-ease-spring io-delay-200
+   ============================================================ */
+
+/* ---------- Időtartam ---------- */
+.io-100  { --io-duration: 100ms;  animation-duration: 100ms; }
+.io-200  { --io-duration: 200ms;  animation-duration: 200ms; }
+.io-300  { --io-duration: 300ms;  animation-duration: 300ms; }
+.io-400  { --io-duration: 400ms;  animation-duration: 400ms; }
+.io-500  { --io-duration: 500ms;  animation-duration: 500ms; }
+.io-600  { --io-duration: 600ms;  animation-duration: 600ms; }
+.io-700  { --io-duration: 700ms;  animation-duration: 700ms; }
+.io-800  { --io-duration: 800ms;  animation-duration: 800ms; }
+.io-1000 { --io-duration: 1000ms; animation-duration: 1000ms; }
+.io-1200 { --io-duration: 1200ms; animation-duration: 1200ms; }
+.io-1400 { --io-duration: 1400ms; animation-duration: 1400ms; }
+.io-1600 { --io-duration: 1600ms; animation-duration: 1600ms; }
+.io-1800 { --io-duration: 1800ms; animation-duration: 1800ms; }
+.io-2000 { --io-duration: 2000ms; animation-duration: 2000ms; }
+
+/* Szemantikus sebesség-aliasok (beszédesebb nevek ugyanazokra) */
+.io-instant { --io-duration: 150ms;  animation-duration: 150ms; }
+.io-fast    { --io-duration: 300ms;  animation-duration: 300ms; }
+.io-normal  { --io-duration: 600ms;  animation-duration: 600ms; }
+.io-slow    { --io-duration: 1000ms; animation-duration: 1000ms; }
+.io-slower  { --io-duration: 1600ms; animation-duration: 1600ms; }
+
+/* ---------- Késleltetés ---------- */
+.io-delay-100  { --io-delay: 100ms;  animation-delay: 100ms; }
+.io-delay-200  { --io-delay: 200ms;  animation-delay: 200ms; }
+.io-delay-300  { --io-delay: 300ms;  animation-delay: 300ms; }
+.io-delay-400  { --io-delay: 400ms;  animation-delay: 400ms; }
+.io-delay-500  { --io-delay: 500ms;  animation-delay: 500ms; }
+.io-delay-700  { --io-delay: 700ms;  animation-delay: 700ms; }
+.io-delay-1000 { --io-delay: 1000ms; animation-delay: 1000ms; }
+
+/* ---------- Easing ---------- */
+.io-ease-in       { --io-ease: var(--io-ease-in);       animation-timing-function: var(--io-ease-in); }
+.io-ease-out      { --io-ease: var(--io-ease-out);      animation-timing-function: var(--io-ease-out); }
+.io-ease-in-out   { --io-ease: var(--io-ease-in-out);   animation-timing-function: var(--io-ease-in-out); }
+.io-ease-bounce   { --io-ease: var(--io-ease-bounce);   animation-timing-function: var(--io-ease-bounce); }
+.io-ease-spring   { --io-ease: var(--io-ease-spring);   animation-timing-function: var(--io-ease-spring); }
+.io-ease-smooth   { --io-ease: var(--io-ease-smooth);   animation-timing-function: var(--io-ease-smooth); }
+.io-ease-snappy   { --io-ease: var(--io-ease-snappy);   animation-timing-function: var(--io-ease-snappy); }
+.io-ease-linear   { --io-ease: linear;                  animation-timing-function: linear; }
+
+/* ---------- Ismétlés (motion engine) ---------- */
+.io-once     { animation-iteration-count: 1; }
+.io-twice    { animation-iteration-count: 2; }
+.io-thrice   { animation-iteration-count: 3; }
+.io-infinite { animation-iteration-count: infinite; }
+
+/* ---------- Irány (motion engine) ---------- */
+.io-reverse   { animation-direction: reverse; }
+.io-alternate { animation-direction: alternate; }
+
+/* ---------- Távolság (reveal slide/move erőssége) ---------- */
+.io-dist-sm { --io-distance: var(--io-distance-sm); }
+.io-dist-md { --io-distance: var(--io-distance-md); }
+.io-dist-lg { --io-distance: var(--io-distance-lg); }
+.io-dist-xl { --io-distance: var(--io-distance-xl); }
+
+/* ---------- Transform origó (flip / scale / rotate) ---------- */
+.io-origin-center { transform-origin: center; }
+.io-origin-top    { transform-origin: top center; }
+.io-origin-bottom { transform-origin: bottom center; }
+.io-origin-left   { transform-origin: center left; }
+.io-origin-right  { transform-origin: center right; }

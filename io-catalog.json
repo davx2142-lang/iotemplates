@@ -1,0 +1,261 @@
+{
+  "name": "IO Motion",
+  "version": "2.1.0",
+  "description": "Utility-first, combinable CSS motion library. Single source of truth for docs, tooling and AI generation.",
+  "model": {
+    "summary": "An entrance = base `io` + one or more state classes + modifiers + a trigger. State classes only set the FROM value; `.io-in` (added by a trigger) resets every channel at once, so any combination composes.",
+    "example": "<div class=\"io io-fade io-slide-right io-zoom-in io-700 io-ease-spring io-scroll\">hi</div>"
+  },
+  "imports": {
+    "css": { "label": "io.css", "html": "<link rel=\"stylesheet\" href=\"io.css\">", "always": true, "note": "Powers every effect. Always required." },
+    "js": { "label": "io.js", "html": "<script src=\"io.js\" defer></script>", "always": false, "note": "Only for JS-marked effects: scroll/scrub reveal, click, stagger, kinetic text split, magnetic/tilt, confetti." }
+  },
+  "axes": [
+    { "id": "effect", "title": { "en": "Effect", "hu": "Effekt" }, "desc": { "en": "What it animates (fade, slide, zoom, blur, flip, mask, rotate). Combinable.", "hu": "Mit animál (áttűnés, csúszás, zoom, blur, flip, mask, forgás). Kombinálható." } },
+    { "id": "trigger", "title": { "en": "Trigger", "hu": "Trigger" }, "desc": { "en": "When it plays: now / scroll / scrub / hover / click.", "hu": "Mikor indul: now / scroll / scrub / hover / click." } },
+    { "id": "speed", "title": { "en": "Speed", "hu": "Sebesség" }, "desc": { "en": "Duration: io-100…io-2000 or aliases.", "hu": "Időtartam: io-100…io-2000 vagy aliasok." } },
+    { "id": "delay", "title": { "en": "Delay", "hu": "Késleltetés" }, "desc": { "en": "io-delay-*.", "hu": "io-delay-*." } },
+    { "id": "easing", "title": { "en": "Easing", "hu": "Easing" }, "desc": { "en": "Timing curve: io-ease-*.", "hu": "Időzítő görbe: io-ease-*." } },
+    { "id": "distance", "title": { "en": "Distance", "hu": "Távolság" }, "desc": { "en": "Travel strength: io-dist-*.", "hu": "Elmozdulás erőssége: io-dist-*." } }
+  ],
+  "groups": [
+    {
+      "id": "base",
+      "title": { "en": "Base", "hu": "Alap" },
+      "desc": { "en": "Enable an engine on the element.", "hu": "Motor bekapcsolása az elemen." },
+      "items": [
+        { "class": "io", "requires": "css", "demo": "badge", "desc": { "en": "Reveal engine: enables combinable transition-based entrances.", "hu": "Reveal motor: kombinálható, átmenet-alapú belépők." } },
+        { "class": "io-motion", "requires": "css", "demo": "badge", "desc": { "en": "Keyframe engine for loops / legacy keyframe animations.", "hu": "Keyframe motor loopokhoz / régi keyframe animációkhoz." } }
+      ]
+    },
+    {
+      "id": "trigger",
+      "title": { "en": "Triggers", "hu": "Triggerek" },
+      "desc": { "en": "Decide WHEN a motion plays. Combine with any effect.", "hu": "Eldöntik, MIKOR induljon a mozgás. Bármely effekttel kombinálható." },
+      "items": [
+        { "class": "io-now", "requires": "js", "needs": ["io"], "demo": "badge", "desc": { "en": "Plays immediately on load.", "hu": "Betöltéskor azonnal lejátszik." } },
+        { "class": "io-reveal", "requires": "js", "needs": ["io"], "demo": "badge", "desc": { "en": "Plays once when the element enters the viewport.", "hu": "Egyszer indul, amikor az elem a nézetbe ér." } },
+        { "class": "io-scroll", "requires": "js", "needs": ["io"], "demo": "badge", "desc": { "en": "Alias of io-reveal: one-shot on scroll-in.", "hu": "Az io-reveal aliasa: egyszer indul görgetéskor." } },
+        { "class": "io-scrub", "requires": "js", "demo": "scrub", "desc": { "en": "Scroll-LINKED: progress tracks scroll position as the element nears viewport centre; reverses too.", "hu": "Görgetés-VEZÉRELT: a haladás a görgetési pozíciót követi, ahogy az elem a nézet közepe felé ér; visszafelé is." } },
+        { "class": "io-hover", "requires": "css", "needs": ["io"], "demo": "badge", "desc": { "en": "Plays while the element (or its direct parent) is hovered. Pure CSS.", "hu": "Akkor játszik, amíg az elemen (vagy közvetlen szülőjén) hoverelsz. Tiszta CSS." } },
+        { "class": "io-click", "requires": "js", "needs": ["io"], "demo": "badge", "desc": { "en": "Replays on click.", "hu": "Kattintásra újrajátszik." } },
+        { "class": "io-always", "requires": "css", "needs": ["io-motion"], "demo": "badge", "desc": { "en": "Keyframe engine: animation always running.", "hu": "Keyframe motor: az animáció folyamatosan fut." } }
+      ]
+    },
+    {
+      "id": "entrance",
+      "title": { "en": "Combinable entrances", "hu": "Kombinálható belépők" },
+      "desc": { "en": "FROM-state classes; stack any of them. Need a trigger to play.", "hu": "Kezdőállapot-classok; bármennyi egymásra rakható. Triggerrel indul." },
+      "needs": ["io", "trigger"],
+      "requires": "css",
+      "items": [
+        { "class": "io-fade", "demo": "badge", "desc": { "en": "Opacity 0 → 1.", "hu": "Áttűnés 0 → 1." } },
+        { "class": "io-slide-up", "demo": "badge", "desc": { "en": "Slides up into place.", "hu": "Alulról felcsúszik a helyére." } },
+        { "class": "io-slide-down", "demo": "badge", "desc": { "en": "Slides down into place.", "hu": "Felülről lecsúszik." } },
+        { "class": "io-slide-left", "demo": "badge", "desc": { "en": "Slides in from the right.", "hu": "Jobbról balra csúszik be." } },
+        { "class": "io-slide-right", "demo": "badge", "desc": { "en": "Slides in from the left.", "hu": "Balról jobbra csúszik be." } },
+        { "class": "io-zoom-in", "demo": "badge", "desc": { "en": "Scales up from smaller.", "hu": "Kisebbről nagyra skálázódik." } },
+        { "class": "io-zoom-out", "demo": "badge", "desc": { "en": "Scales down from larger.", "hu": "Nagyobbról kisebbre." } },
+        { "class": "io-blur", "demo": "badge", "desc": { "en": "Sharpens from blur (frosted).", "hu": "Blurból élesedik (frosted)." } },
+        { "class": "io-rotate-in", "demo": "badge", "desc": { "en": "Tilts in (negative angle).", "hu": "Megdőlve úszik be (negatív szög)." } },
+        { "class": "io-rotate-in-r", "demo": "badge", "desc": { "en": "Tilts in (positive angle).", "hu": "Megdőlve úszik be (pozitív szög)." } },
+        { "class": "io-flip-up", "demo": "badge", "desc": { "en": "3D flip on the X axis (from top).", "hu": "3D flip az X tengelyen (felülről)." } },
+        { "class": "io-flip-down", "demo": "badge", "desc": { "en": "3D flip on the X axis (from bottom).", "hu": "3D flip az X tengelyen (alulról)." } },
+        { "class": "io-flip-left", "demo": "badge", "desc": { "en": "3D flip on the Y axis.", "hu": "3D flip az Y tengelyen." } },
+        { "class": "io-flip-right", "demo": "badge", "desc": { "en": "3D flip on the Y axis (opposite).", "hu": "3D flip az Y tengelyen (ellenkező)." } },
+        { "class": "io-mask-up", "demo": "badge", "desc": { "en": "Clip-path wipe reveal upward.", "hu": "Clip-path maszk lehúzás felfelé." } },
+        { "class": "io-mask-down", "demo": "badge", "desc": { "en": "Clip-path wipe reveal downward.", "hu": "Clip-path maszk lefelé." } },
+        { "class": "io-mask-left", "demo": "badge", "desc": { "en": "Clip-path wipe reveal leftward.", "hu": "Clip-path maszk balra." } },
+        { "class": "io-mask-right", "demo": "badge", "desc": { "en": "Clip-path wipe reveal rightward.", "hu": "Clip-path maszk jobbra." } }
+      ]
+    },
+    {
+      "id": "speed",
+      "title": { "en": "Speed", "hu": "Sebesség" },
+      "desc": { "en": "Duration of the entrance / keyframe.", "hu": "A belépő / keyframe időtartama." },
+      "requires": "css",
+      "items": [
+        { "class": "io-100", "value": "100ms" }, { "class": "io-200", "value": "200ms" }, { "class": "io-300", "value": "300ms" },
+        { "class": "io-400", "value": "400ms" }, { "class": "io-500", "value": "500ms" }, { "class": "io-600", "value": "600ms" },
+        { "class": "io-700", "value": "700ms" }, { "class": "io-800", "value": "800ms" }, { "class": "io-1000", "value": "1000ms" },
+        { "class": "io-1200", "value": "1200ms" }, { "class": "io-1400", "value": "1400ms" }, { "class": "io-1600", "value": "1600ms" },
+        { "class": "io-1800", "value": "1800ms" }, { "class": "io-2000", "value": "2000ms" },
+        { "class": "io-instant", "value": "150ms", "alias": true }, { "class": "io-fast", "value": "300ms", "alias": true },
+        { "class": "io-normal", "value": "600ms", "alias": true }, { "class": "io-slow", "value": "1000ms", "alias": true },
+        { "class": "io-slower", "value": "1600ms", "alias": true }
+      ]
+    },
+    {
+      "id": "delay",
+      "title": { "en": "Delay", "hu": "Késleltetés" },
+      "desc": { "en": "Wait before playing.", "hu": "Várakozás indítás előtt." },
+      "requires": "css",
+      "items": [
+        { "class": "io-delay-100", "value": "100ms" }, { "class": "io-delay-200", "value": "200ms" },
+        { "class": "io-delay-300", "value": "300ms" }, { "class": "io-delay-400", "value": "400ms" },
+        { "class": "io-delay-500", "value": "500ms" }, { "class": "io-delay-700", "value": "700ms" },
+        { "class": "io-delay-1000", "value": "1000ms" }
+      ]
+    },
+    {
+      "id": "easing",
+      "title": { "en": "Easing", "hu": "Easing" },
+      "desc": { "en": "Timing curve.", "hu": "Időzítő görbe." },
+      "requires": "css",
+      "items": [
+        { "class": "io-ease-in" }, { "class": "io-ease-out" }, { "class": "io-ease-in-out" },
+        { "class": "io-ease-bounce" }, { "class": "io-ease-spring" }, { "class": "io-ease-smooth" },
+        { "class": "io-ease-snappy" }, { "class": "io-ease-linear" }
+      ]
+    },
+    {
+      "id": "distance",
+      "title": { "en": "Distance & origin", "hu": "Távolság & origó" },
+      "desc": { "en": "Travel strength and transform origin.", "hu": "Elmozdulás erőssége és transform origó." },
+      "requires": "css",
+      "items": [
+        { "class": "io-dist-sm", "value": "0.5rem" }, { "class": "io-dist-md", "value": "1.5rem" },
+        { "class": "io-dist-lg", "value": "3rem" }, { "class": "io-dist-xl", "value": "6rem" },
+        { "class": "io-origin-center" }, { "class": "io-origin-top" }, { "class": "io-origin-bottom" },
+        { "class": "io-origin-left" }, { "class": "io-origin-right" }
+      ]
+    },
+    {
+      "id": "repeat",
+      "title": { "en": "Repeat & direction", "hu": "Ismétlés & irány" },
+      "desc": { "en": "Iteration count and direction (keyframe engine).", "hu": "Ismétlésszám és irány (keyframe motor)." },
+      "requires": "css",
+      "items": [
+        { "class": "io-once" }, { "class": "io-twice" }, { "class": "io-thrice" }, { "class": "io-infinite" },
+        { "class": "io-reverse" }, { "class": "io-alternate" }
+      ]
+    },
+    {
+      "id": "attention",
+      "title": { "en": "Attention & loops", "hu": "Figyelem & ciklus" },
+      "desc": { "en": "Standalone loops; add io-motion + io-hover to gate on hover.", "hu": "Önálló loopok; io-motion + io-hover hoverre kapuzza." },
+      "requires": "css",
+      "items": [
+        { "class": "io-pulse", "demo": "badge", "loop": true }, { "class": "io-heartbeat", "demo": "badge", "loop": true },
+        { "class": "io-float", "demo": "badge", "loop": true }, { "class": "io-spin", "demo": "badge", "loop": true },
+        { "class": "io-ping", "demo": "badge", "loop": true }, { "class": "io-flash", "demo": "badge", "loop": true },
+        { "class": "io-bounce", "demo": "badge" }, { "class": "io-shake", "demo": "badge" },
+        { "class": "io-wobble", "demo": "badge" }, { "class": "io-jello", "demo": "badge" },
+        { "class": "io-vibrate", "demo": "badge" }, { "class": "io-swing", "demo": "badge" },
+        { "class": "io-rubber", "demo": "badge" }, { "class": "io-tada", "demo": "badge" }
+      ]
+    },
+    {
+      "id": "text",
+      "title": { "en": "Text in motion", "hu": "Szöveg mozgásban" },
+      "desc": { "en": "Kinetic typography and continuous text effects.", "hu": "Kinetikus tipográfia és folyamatos szöveg-effektek." },
+      "items": [
+        { "class": "io-words", "requires": "js", "demo": "text", "data": ["data-io-effect", "data-io-stagger"], "desc": { "en": "Splits text into words and reveals each (staggered).", "hu": "Szavakra bontja a szöveget és egyenként, lépcsőzve mutatja." } },
+        { "class": "io-chars", "requires": "js", "demo": "text", "data": ["data-io-effect", "data-io-stagger"], "desc": { "en": "Splits text into characters and reveals each.", "hu": "Betűkre bontja a szöveget és egyenként mutatja." } },
+        { "class": "io-gradient-text", "requires": "css", "demo": "gradient", "desc": { "en": "Animated multi-colour gradient text.", "hu": "Animált, többszínű gradiens szöveg." } },
+        { "class": "io-shimmer-text", "requires": "css", "demo": "shimmer", "desc": { "en": "Light sweep across the text.", "hu": "Fény végigfut a szövegen." } },
+        { "class": "io-typewriter", "requires": "css", "demo": "text", "data": ["--io-tw-steps"], "desc": { "en": "Typewriter reveal with caret.", "hu": "Gépelős megjelenés kurzorral." } },
+        { "class": "io-underline", "requires": "css", "demo": "underline", "vars": ["--io-underline-color"], "desc": { "en": "Draws an underline left-to-right (one-shot / hover).", "hu": "Aláhúzást húz be balról jobbra (egyszeri / hover)." } }
+      ]
+    },
+    {
+      "id": "gradient-palette",
+      "title": { "en": "Gradient palettes", "hu": "Gradiens paletták" },
+      "desc": { "en": "Colours for io-gradient-text. Or set --io-grad-1/2/3 inline.", "hu": "Színek az io-gradient-text-hez. Vagy --io-grad-1/2/3 inline." },
+      "requires": "css",
+      "needs": ["io-gradient-text"],
+      "vars": ["--io-grad-1", "--io-grad-2", "--io-grad-3"],
+      "items": [
+        { "class": "io-grad-aurora", "demo": "gradient" }, { "class": "io-grad-sunset", "demo": "gradient" },
+        { "class": "io-grad-ocean", "demo": "gradient" }, { "class": "io-grad-mint", "demo": "gradient" },
+        { "class": "io-grad-fire", "demo": "gradient" }, { "class": "io-grad-candy", "demo": "gradient" },
+        { "class": "io-grad-gold", "demo": "gradient" }
+      ]
+    },
+    {
+      "id": "text-speed",
+      "title": { "en": "Text effect speed", "hu": "Szöveg-effekt sebesség" },
+      "desc": { "en": "Speed of continuous text effects (independent of entrance).", "hu": "A folyamatos szöveg-effektek sebessége (a belépőtől függetlenül)." },
+      "requires": "css",
+      "items": [
+        { "class": "io-text-slow", "value": "9s" }, { "class": "io-text-normal", "value": "6s" }, { "class": "io-text-fast", "value": "3s" }
+      ]
+    },
+    {
+      "id": "hover",
+      "title": { "en": "Hover & interaction", "hu": "Hover & interakció" },
+      "desc": { "en": "Standalone hover utilities; combinable. Magnetic/tilt need io.js.", "hu": "Önálló hover utilityk; kombinálhatók. A magnetic/tilt io.js-t kér." },
+      "requires": "css",
+      "items": [
+        { "class": "io-hover-lift", "demo": "btn" }, { "class": "io-hover-grow", "demo": "btn" },
+        { "class": "io-hover-shrink", "demo": "btn" }, { "class": "io-hover-rotate", "demo": "btn" },
+        { "class": "io-hover-tilt", "demo": "btn" }, { "class": "io-hover-glow", "demo": "btn" },
+        { "class": "io-hover-float", "demo": "btn" }, { "class": "io-hover-pop", "demo": "btn" },
+        { "class": "io-hover-press", "demo": "btn" }, { "class": "io-hover-underline", "demo": "btn" },
+        { "class": "io-hover-sweep", "demo": "btn" }, { "class": "io-hover-border", "demo": "btn" },
+        { "class": "io-magnetic", "requires": "js", "demo": "btn", "data": ["data-io-strength"] },
+        { "class": "io-tilt", "requires": "js", "demo": "btn", "data": ["data-io-max"] }
+      ]
+    },
+    {
+      "id": "path",
+      "title": { "en": "Motion paths", "hu": "Mozgás-útvonalak" },
+      "desc": { "en": "Move an element along a CSS offset-path. Needs io-motion + a trigger.", "hu": "Elem mozgatása CSS offset-path mentén. io-motion + trigger kell." },
+      "requires": "css",
+      "needs": ["io-motion", "io-path"],
+      "items": [
+        { "class": "io-path", "demo": "path" }, { "class": "io-path-move", "demo": "path" }, { "class": "io-path-yoyo", "demo": "path" },
+        { "class": "io-path-line", "demo": "path" }, { "class": "io-path-arc", "demo": "path" }, { "class": "io-path-wave", "demo": "path" },
+        { "class": "io-path-loop", "demo": "path" }, { "class": "io-path-heart", "demo": "path" },
+        { "class": "io-path-rotate-auto" }, { "class": "io-path-rotate-0" }, { "class": "io-path-rotate-reverse" }
+      ]
+    },
+    {
+      "id": "effects",
+      "title": { "en": "Effects", "hu": "Effektek" },
+      "desc": { "en": "Special visual effects.", "hu": "Speciális vizuális effektek." },
+      "items": [
+        { "class": "io-confetti", "requires": "js", "demo": "confetti", "data": ["data-io-confetti"], "desc": { "en": "Confetti burst on hover.", "hu": "Confetti robbanás hoverre." } },
+        { "class": "io-kenburns", "requires": "css", "demo": "box", "desc": { "en": "Slow zoom/pan for images (Ken Burns).", "hu": "Lassú zoom/pan képekhez (Ken Burns)." } },
+        { "class": "io-bg-pan", "requires": "css", "demo": "box", "desc": { "en": "Pans a background gradient.", "hu": "Háttér-gradiens mozgatása." } },
+        { "class": "io-color-cycle", "requires": "css", "demo": "box", "desc": { "en": "Hue-rotates continuously.", "hu": "Folyamatos színforgatás." } },
+        { "class": "io-marquee", "requires": "css", "demo": "box", "desc": { "en": "Infinite horizontal ticker.", "hu": "Végtelen vízszintes szalag." } },
+        { "class": "io-skeleton", "requires": "css", "demo": "box", "desc": { "en": "Loading shimmer placeholder.", "hu": "Töltődő shimmer placeholder." } }
+      ]
+    },
+    {
+      "id": "scrub-extra",
+      "title": { "en": "Scroll-linked extras", "hu": "Görgetés-vezérelt extrák" },
+      "desc": { "en": "Modifiers for io-scrub.", "hu": "Módosítók az io-scrub-hoz." },
+      "requires": "js",
+      "needs": ["io-scrub"],
+      "vars": ["--io-scrub-from", "--io-scrub-to", "--io-underline-color"],
+      "items": [
+        { "class": "io-scrub-color", "demo": "scrub", "desc": { "en": "Colour shifts with scroll progress (set --io-scrub-from/to).", "hu": "A szín a görgetési haladással változik (--io-scrub-from/to)." } },
+        { "class": "io-scrub-underline", "demo": "scrub", "desc": { "en": "Underline draws in as you scroll (progress-linked).", "hu": "Az aláhúzás a görgetéssel húzódik be (haladás-vezérelt)." } },
+        { "class": "io-scrub-words", "demo": "scrub", "desc": { "en": "Words rise in word-by-word, linked to scroll. Combine with io-slide-*/io-fade for direction.", "hu": "A szavak szavanként úsznak be, görgetéshez kötve. Iránnyal kombinálható (io-slide-*/io-fade)." } },
+        { "class": "io-scrub-chars", "demo": "scrub", "desc": { "en": "Letters pop in one-by-one, linked to scroll. Combine with io-slide-*/io-fade for direction.", "hu": "A betűk egyenként ugranak be, görgetéshez kötve. Iránnyal kombinálható (io-slide-*/io-fade)." } }
+      ]
+    }
+  ],
+  "data_attributes": [
+    { "attr": "data-io-stagger", "on": "io-stagger / io-words / io-chars", "desc": { "en": "Per-item delay in ms.", "hu": "Elemenkénti késleltetés ms-ban." } },
+    { "attr": "data-io-effect", "on": "io-words / io-chars", "desc": { "en": "Effect classes applied to each word/char.", "hu": "Az egyes szavakra/betűkre tett effekt-classok." } },
+    { "attr": "data-io-scrub", "on": "io-scrub", "desc": { "en": "Travel distance in px.", "hu": "Elmozdulás px-ben." } },
+    { "attr": "data-io-strength", "on": "io-magnetic", "desc": { "en": "Magnetic pull factor (0–1).", "hu": "Mágneses húzás erőssége (0–1)." } },
+    { "attr": "data-io-max", "on": "io-tilt", "desc": { "en": "Max tilt angle in deg.", "hu": "Max dőlésszög fokban." } },
+    { "attr": "data-io-confetti", "on": "io-confetti", "desc": { "en": "Number of confetti spots.", "hu": "Confetti pöttyök száma." } }
+  ],
+  "css_variables": [
+    { "var": "--io-grad-1", "desc": { "en": "Gradient text colour 1.", "hu": "Gradiens szöveg 1. szín." } },
+    { "var": "--io-grad-2", "desc": { "en": "Gradient text colour 2.", "hu": "Gradiens szöveg 2. szín." } },
+    { "var": "--io-grad-3", "desc": { "en": "Gradient text colour 3.", "hu": "Gradiens szöveg 3. szín." } },
+    { "var": "--io-scrub-from", "desc": { "en": "io-scrub-color start colour.", "hu": "io-scrub-color kezdőszín." } },
+    { "var": "--io-scrub-to", "desc": { "en": "io-scrub-color end colour.", "hu": "io-scrub-color végszín." } },
+    { "var": "--io-distance", "desc": { "en": "Override slide travel distance.", "hu": "Csúszási távolság felülírása." } },
+    { "var": "--io-duration", "desc": { "en": "Override entrance duration.", "hu": "Belépő időtartam felülírása." } }
+  ],
+  "accessibility": {
+    "reduced_motion": { "en": "All animations/transitions are disabled under prefers-reduced-motion: reduce; content shows in final state.", "hu": "prefers-reduced-motion: reduce esetén minden animáció/átmenet kikapcsol; a tartalom a végállapotban jelenik meg." }
+  }
+}

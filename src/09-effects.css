@@ -1,0 +1,124 @@
+/* ============================================================
+   IO Motion — 09 · Effects
+   Speciális, "látványos" effektek: confetti, kép/háttér mozgás,
+   marquee, skeleton shimmer.
+   ============================================================ */
+
+/* ---------- Confetti (CSS-only burst, JS tölti fel a pöttyökkel) ---------- */
+.io-confetti {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.io-confetti__spots {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.io-confetti__spot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  transform: translate(-50%, -50%) scale(0.8);
+  opacity: 0;
+  --dx: 0px; --dy: -80px; --delay: 0ms; --dur: 800ms; --hue: 200;
+  background: hsl(var(--hue) 90% 60%);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.12);
+}
+.io-confetti:hover .io-confetti__spot,
+*:hover > .io-confetti .io-confetti__spot {
+  animation: io-confetti-burst var(--dur) cubic-bezier(0.39, 2.01, 0.27, 0.75) var(--delay) both;
+}
+@keyframes io-confetti-burst {
+  0%   { transform: translate(-50%, -50%) translate(0, 0) rotate(0deg) scale(0.6); opacity: 0; }
+  15%  { opacity: 1; }
+  100% { transform: translate(-50%, -50%) translate(var(--dx), var(--dy)) rotate(360deg) scale(1); opacity: 0; }
+}
+/* előre kiosztott irányok / színek / késleltetések (24 pötty) */
+.io-confetti__spot:nth-child(1)  { --dx: -70px; --dy: -40px; --delay:  0ms; --dur: 700ms; --hue: 200; }
+.io-confetti__spot:nth-child(2)  { --dx: -55px; --dy: -85px; --delay: 30ms; --dur: 850ms; --hue: 35; }
+.io-confetti__spot:nth-child(3)  { --dx: -25px; --dy: -95px; --delay: 60ms; --dur: 900ms; --hue: 320; }
+.io-confetti__spot:nth-child(4)  { --dx:  10px; --dy: -105px; --delay: 10ms; --dur: 820ms; --hue: 160; }
+.io-confetti__spot:nth-child(5)  { --dx:  45px; --dy: -90px; --delay: 50ms; --dur: 880ms; --hue: 10; }
+.io-confetti__spot:nth-child(6)  { --dx:  75px; --dy: -55px; --delay: 20ms; --dur: 760ms; --hue: 265; }
+.io-confetti__spot:nth-child(7)  { --dx: -90px; --dy:  10px; --delay: 80ms; --dur: 900ms; --hue: 210; }
+.io-confetti__spot:nth-child(8)  { --dx: -70px; --dy:  40px; --delay: 40ms; --dur: 820ms; --hue: 45; }
+.io-confetti__spot:nth-child(9)  { --dx: -40px; --dy:  65px; --delay: 90ms; --dur: 880ms; --hue: 300; }
+.io-confetti__spot:nth-child(10) { --dx:  -5px; --dy:  80px; --delay: 60ms; --dur: 920ms; --hue: 170; }
+.io-confetti__spot:nth-child(11) { --dx:  35px; --dy:  70px; --delay: 30ms; --dur: 840ms; --hue: 25; }
+.io-confetti__spot:nth-child(12) { --dx:  70px; --dy:  45px; --delay:100ms; --dur: 940ms; --hue: 250; }
+.io-confetti__spot:nth-child(13) { --dx: -85px; --dy: -10px; --delay: 20ms; --dur: 780ms; --hue: 190; }
+.io-confetti__spot:nth-child(14) { --dx: -60px; --dy:  15px; --delay: 70ms; --dur: 860ms; --hue: 60; }
+.io-confetti__spot:nth-child(15) { --dx: -30px; --dy:  25px; --delay: 10ms; --dur: 820ms; --hue: 330; }
+.io-confetti__spot:nth-child(16) { --dx:  20px; --dy:  30px; --delay: 50ms; --dur: 860ms; --hue: 140; }
+.io-confetti__spot:nth-child(17) { --dx:  55px; --dy:  20px; --delay: 90ms; --dur: 920ms; --hue: 15; }
+.io-confetti__spot:nth-child(18) { --dx:  90px; --dy:  -5px; --delay: 40ms; --dur: 800ms; --hue: 270; }
+.io-confetti__spot:nth-child(19) { --dx: -45px; --dy: -20px; --delay:110ms; --dur: 880ms; --hue: 205; }
+.io-confetti__spot:nth-child(20) { --dx: -15px; --dy: -35px; --delay: 60ms; --dur: 760ms; --hue: 40; }
+.io-confetti__spot:nth-child(21) { --dx:  15px; --dy: -40px; --delay: 30ms; --dur: 820ms; --hue: 310; }
+.io-confetti__spot:nth-child(22) { --dx:  40px; --dy: -28px; --delay: 90ms; --dur: 900ms; --hue: 165; }
+.io-confetti__spot:nth-child(23) { --dx:  20px; --dy: -75px; --delay:120ms; --dur: 960ms; --hue: 5; }
+.io-confetti__spot:nth-child(24) { --dx: -20px; --dy: -70px; --delay: 80ms; --dur: 920ms; --hue: 255; }
+
+/* ---------- Kép / háttér mozgás ---------- */
+.io-kenburns   { --io-anim: io-kenburns; }
+.io-bg-pan     { --io-anim: io-bg-pan; }
+.io-color-cycle{ --io-anim: io-color-cycle; }
+
+:not(.io-motion).io-kenburns,
+:not(.io-motion).io-bg-pan,
+:not(.io-motion).io-color-cycle {
+  animation-name: var(--io-anim);
+  animation-duration: var(--io-duration);
+  animation-timing-function: var(--io-ease-in-out);
+  animation-fill-mode: both;
+  animation-iteration-count: infinite;
+}
+.io-kenburns  { --io-duration: 8000ms; animation-direction: alternate; }
+.io-bg-pan    { --io-duration: 6000ms; --io-ease: linear; }
+.io-color-cycle { --io-duration: 4000ms; }
+
+@keyframes io-kenburns {
+  0%   { transform: scale(1) translateY(0); transform-origin: 50% 16%; }
+  100% { transform: scale(1.18) translateY(-12px); transform-origin: top; }
+}
+@keyframes io-bg-pan {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
+@keyframes io-color-cycle {
+  0%   { filter: hue-rotate(0deg); }
+  100% { filter: hue-rotate(360deg); }
+}
+
+/* ---------- Marquee (végtelen szalag) ---------- */
+.io-marquee {
+  display: flex;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.io-marquee > * {
+  flex: 0 0 auto;
+  animation: io-marquee var(--io-duration, 18s) linear infinite;
+}
+.io-marquee:hover > * { animation-play-state: paused; }
+@keyframes io-marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-100%); }
+}
+
+/* ---------- Skeleton shimmer (töltődő tartalom) ---------- */
+.io-skeleton {
+  background: linear-gradient(100deg, #e2e8f0 30%, #f1f5f9 50%, #e2e8f0 70%);
+  background-size: 200% 100%;
+  animation: io-skeleton 1500ms ease-in-out infinite;
+  border-radius: 8px;
+}
+@keyframes io-skeleton {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}

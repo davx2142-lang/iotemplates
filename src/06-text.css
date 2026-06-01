@@ -1,0 +1,185 @@
+/* ============================================================
+   IO Motion — 06 · Text (szöveg-mozgás, 2026 trendek)
+   - Kinetikus belépők (tracking / focus-in)
+   - Animált gradiens & shimmer szöveg
+   - Szavankénti / betűnkénti, lépcsőzött reveal (JS bontja szét)
+   ============================================================ */
+
+/* ---- Kinetikus belépők (egyszeri, hoverre vagy reveal-re) ---- */
+.io-tracking-in { --io-anim: io-tracking-in; }
+.io-focus-in    { --io-anim: io-focus-in; }
+.io-text-pop    { --io-anim: io-text-pop; }
+
+:not(.io-motion).io-tracking-in,
+:not(.io-motion).io-focus-in,
+:not(.io-motion).io-text-pop {
+  animation-name: var(--io-anim);
+  animation-duration: var(--io-duration);
+  animation-timing-function: var(--io-ease);
+  animation-fill-mode: both;
+  animation-iteration-count: 1;
+}
+
+@keyframes io-tracking-in {
+  0%   { letter-spacing: -0.5em; opacity: 0; }
+  40%  { opacity: 0.6; }
+  100% { letter-spacing: normal; opacity: 1; }
+}
+@keyframes io-focus-in {
+  0%   { letter-spacing: -0.4em; filter: blur(12px); opacity: 0; }
+  100% { letter-spacing: normal; filter: blur(0); opacity: 1; }
+}
+@keyframes io-text-pop {
+  0%   { transform: scale(0.8) translateY(0.2em); opacity: 0; }
+  60%  { transform: scale(1.04); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+/* ---- Animált gradiens szöveg (folyamatos) ---- */
+.io-gradient-text {
+  background-image: linear-gradient(
+    90deg,
+    var(--io-grad-1, #0ea5e9),
+    var(--io-grad-2, #a855f7),
+    var(--io-grad-3, #f43f5e),
+    var(--io-grad-1, #0ea5e9)
+  );
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  /* saját sebesség-változó, hogy a belépő io-NNN ne tegye strobossá */
+  animation: io-gradient-flow var(--io-text-duration, 6000ms) linear infinite;
+}
+@keyframes io-gradient-flow {
+  to { background-position: 300% 50%; }
+}
+
+/* ---- Shimmer (fény végigfut a szövegen) ---- */
+.io-shimmer-text {
+  /* Fénycsóva fut végig a szövegen.
+     Állítható: --io-shimmer-base (alapszín) és --io-shimmer-hi (csóva színe).
+     FONTOS: explicit base kell, mert a color:transparent miatt a currentColor
+     itt átlátszó lenne → a régi color-mix-es változat nem látszott. */
+  --io-shimmer-base: #64748b;   /* slate-500: sötét háttéren jól látszik */
+  --io-shimmer-hi: #ffffff;
+  background-image: linear-gradient(
+    100deg,
+    var(--io-shimmer-base) 0%,
+    var(--io-shimmer-base) 42%,
+    var(--io-shimmer-hi) 50%,
+    var(--io-shimmer-base) 58%,
+    var(--io-shimmer-base) 100%
+  );
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: io-shimmer-text var(--io-text-duration, 2500ms) linear infinite;
+}
+@keyframes io-shimmer-text {
+  /* A pozíció a 0%–100% tartományban marad: a 200%-os, no-repeat gradiens
+     így VÉGIG fedi a szöveget → a betűk soha nem tűnnek el, csak a fénycsóva
+     fut át rajtuk. */
+  0%   { background-position: 100% 0; }
+  100% { background-position: 0% 0; }
+}
+
+/* ---- Typewriter (gépelős) ---- */
+.io-typewriter {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  border-right: 2px solid currentColor;
+  width: 0;
+  animation:
+    io-typewriter var(--io-duration, 2500ms) steps(var(--io-tw-steps, 24)) forwards,
+    io-caret 750ms step-end infinite;
+}
+@keyframes io-typewriter { to { width: 100%; } }
+@keyframes io-caret { 50% { border-color: transparent; } }
+
+/* ---- Szavankénti / betűnkénti reveal (a JS bontja .io-w / .io-c spanekre) ---- */
+.io-words .io-w,
+.io-chars .io-c {
+  display: inline-block;
+  white-space: pre;          /* a szóközök megmaradnak */
+}
+
+/* ---- Animált aláhúzás (io-underline) ----
+   Az aláhúzás balról jobbra behúzódik. Önállóan egyszer lejátszik;
+   a demóban hoverre újraindul (animation-restart). Szín: --io-underline-color. */
+.io-underline {
+  position: relative;
+  display: inline-block;
+}
+.io-underline::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -0.08em;
+  height: 0.08em;
+  width: 100%;
+  background: var(--io-underline-color, currentColor);
+  border-radius: 2px;
+  transform: scaleX(0);
+  transform-origin: left center;
+  animation: io-underline var(--io-duration, 900ms) var(--io-ease, cubic-bezier(0.22,0.61,0.36,1)) both;
+}
+@keyframes io-underline {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+/* ---- Görgetés-aláhúzás (io-scrub-underline) ----
+   A vonal a görgetési haladással (--io-p: 0→1) húzódik balról jobbra. */
+.io-scrub-underline {
+  position: relative;
+  display: inline-block;
+}
+.io-scrub-underline::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -0.08em;
+  height: 0.08em;
+  width: 100%;
+  background: var(--io-underline-color, currentColor);
+  border-radius: 2px;
+  transform: scaleX(var(--io-p, 0));
+  transform-origin: left center;
+}
+
+/* ---- Görgetésre felugró/beúszó szöveg, szavanként/betűnként ----
+   A JS bontja .io-sw / .io-sc spanekre, és spanenként állítja a --io-p-t.
+   Az irányt a io-slide-* / io-fade / io-zoom-* osztályok adják (kombinálható). */
+.io-scrub-words .io-sw,
+.io-scrub-chars .io-sc {
+  display: inline-block;
+  white-space: pre;
+  will-change: transform, opacity;
+}
+
+/* ---- Folyamatos szöveg-effektek sebessége (gradient / shimmer) ---- */
+.io-text-slow   { --io-text-duration: 9s; }
+.io-text-normal { --io-text-duration: 6s; }
+.io-text-fast   { --io-text-duration: 3s; }
+
+/* A folyamatos szöveg-effektek sebességét NE írja felül a belépő io-NNN /
+   io-fast/io-slow duration-módosító. Dupla osztály → magasabb specificitás,
+   mint a módosítóké, így az --io-text-duration marad érvényben. */
+.io-gradient-text.io-gradient-text { animation-duration: var(--io-text-duration, 6s); }
+.io-shimmer-text.io-shimmer-text   { animation-duration: var(--io-text-duration, 2.5s); }
+
+/* ---- Gradiens szöveg színpaletták (kombinálható: io-gradient-text io-grad-sunset) ----
+   Saját színekhez állítsd a --io-grad-1/2/3 változókat inline style-ban. */
+.io-grad-aurora { --io-grad-1: #0ea5e9; --io-grad-2: #a855f7; --io-grad-3: #22c55e; }
+.io-grad-sunset { --io-grad-1: #f59e0b; --io-grad-2: #f43f5e; --io-grad-3: #a855f7; }
+.io-grad-ocean  { --io-grad-1: #22d3ee; --io-grad-2: #2563eb; --io-grad-3: #0ea5e9; }
+.io-grad-mint   { --io-grad-1: #10b981; --io-grad-2: #a3e635; --io-grad-3: #10b981; }
+.io-grad-fire   { --io-grad-1: #f97316; --io-grad-2: #ef4444; --io-grad-3: #f59e0b; }
+.io-grad-candy  { --io-grad-1: #ec4899; --io-grad-2: #a855f7; --io-grad-3: #ec4899; }
+.io-grad-gold   { --io-grad-1: #fde047; --io-grad-2: #f59e0b; --io-grad-3: #fde047; }

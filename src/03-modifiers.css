@@ -1,0 +1,71 @@
+/* ============================================================
+   IO Motion — 03 · Modifiers (kombinálható módosítók)
+   Mindegyik egyszerre hangolja a REVEAL és a MOTION motort,
+   így ugyanaz az osztály mindkét rendszerben működik.
+   Pl.  io io-fade io-slide-up io-700 io-ease-spring io-delay-200
+   ============================================================ */
+
+/* ---------- Időtartam ---------- */
+.io-100  { --io-duration: 100ms;  animation-duration: 100ms; }
+.io-200  { --io-duration: 200ms;  animation-duration: 200ms; }
+.io-300  { --io-duration: 300ms;  animation-duration: 300ms; }
+.io-400  { --io-duration: 400ms;  animation-duration: 400ms; }
+.io-500  { --io-duration: 500ms;  animation-duration: 500ms; }
+.io-600  { --io-duration: 600ms;  animation-duration: 600ms; }
+.io-700  { --io-duration: 700ms;  animation-duration: 700ms; }
+.io-800  { --io-duration: 800ms;  animation-duration: 800ms; }
+.io-1000 { --io-duration: 1000ms; animation-duration: 1000ms; }
+.io-1200 { --io-duration: 1200ms; animation-duration: 1200ms; }
+.io-1400 { --io-duration: 1400ms; animation-duration: 1400ms; }
+.io-1600 { --io-duration: 1600ms; animation-duration: 1600ms; }
+.io-1800 { --io-duration: 1800ms; animation-duration: 1800ms; }
+.io-2000 { --io-duration: 2000ms; animation-duration: 2000ms; }
+
+/* Szemantikus sebesség-aliasok (beszédesebb nevek ugyanazokra) */
+.io-instant { --io-duration: 150ms;  animation-duration: 150ms; }
+.io-fast    { --io-duration: 300ms;  animation-duration: 300ms; }
+.io-normal  { --io-duration: 600ms;  animation-duration: 600ms; }
+.io-slow    { --io-duration: 1000ms; animation-duration: 1000ms; }
+.io-slower  { --io-duration: 1600ms; animation-duration: 1600ms; }
+
+/* ---------- Késleltetés ---------- */
+.io-delay-100  { --io-delay: 100ms;  animation-delay: 100ms; }
+.io-delay-200  { --io-delay: 200ms;  animation-delay: 200ms; }
+.io-delay-300  { --io-delay: 300ms;  animation-delay: 300ms; }
+.io-delay-400  { --io-delay: 400ms;  animation-delay: 400ms; }
+.io-delay-500  { --io-delay: 500ms;  animation-delay: 500ms; }
+.io-delay-700  { --io-delay: 700ms;  animation-delay: 700ms; }
+.io-delay-1000 { --io-delay: 1000ms; animation-delay: 1000ms; }
+
+/* ---------- Easing ---------- */
+.io-ease-in       { --io-ease: var(--io-ease-in);       animation-timing-function: var(--io-ease-in); }
+.io-ease-out      { --io-ease: var(--io-ease-out);      animation-timing-function: var(--io-ease-out); }
+.io-ease-in-out   { --io-ease: var(--io-ease-in-out);   animation-timing-function: var(--io-ease-in-out); }
+.io-ease-bounce   { --io-ease: var(--io-ease-bounce);   animation-timing-function: var(--io-ease-bounce); }
+.io-ease-spring   { --io-ease: var(--io-ease-spring);   animation-timing-function: var(--io-ease-spring); }
+.io-ease-smooth   { --io-ease: var(--io-ease-smooth);   animation-timing-function: var(--io-ease-smooth); }
+.io-ease-snappy   { --io-ease: var(--io-ease-snappy);   animation-timing-function: var(--io-ease-snappy); }
+.io-ease-linear   { --io-ease: linear;                  animation-timing-function: linear; }
+
+/* ---------- Ismétlés (motion engine) ---------- */
+.io-once     { animation-iteration-count: 1; }
+.io-twice    { animation-iteration-count: 2; }
+.io-thrice   { animation-iteration-count: 3; }
+.io-infinite { animation-iteration-count: infinite; }
+
+/* ---------- Irány (motion engine) ---------- */
+.io-reverse   { animation-direction: reverse; }
+.io-alternate { animation-direction: alternate; }
+
+/* ---------- Távolság (reveal slide/move erőssége) ---------- */
+.io-dist-sm { --io-distance: var(--io-distance-sm); }
+.io-dist-md { --io-distance: var(--io-distance-md); }
+.io-dist-lg { --io-distance: var(--io-distance-lg); }
+.io-dist-xl { --io-distance: var(--io-distance-xl); }
+
+/* ---------- Transform origó (flip / scale / rotate) ---------- */
+.io-origin-center { transform-origin: center; }
+.io-origin-top    { transform-origin: top center; }
+.io-origin-bottom { transform-origin: bottom center; }
+.io-origin-left   { transform-origin: center left; }
+.io-origin-right  { transform-origin: center right; }

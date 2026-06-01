@@ -1,0 +1,102 @@
+/* ============================================================
+   IO Motion — 07 · Hover & Interakció
+   Önálló utilityk (nem kell .io / .io-motion).
+   Kombinálhatók egymással: io-hover-lift io-hover-glow
+   ============================================================ */
+
+[class*="io-hover-"] {
+  transition-property: transform, box-shadow, filter, background-position, color;
+  transition-duration: var(--io-hover-duration);
+  transition-timing-function: var(--io-ease-smooth);
+}
+
+/* Emelkedés */
+.io-hover-lift:hover   { transform: translateY(var(--io-hover-lift)); }
+/* Növekedés / zsugorodás */
+.io-hover-grow:hover   { transform: scale(var(--io-hover-scale)); }
+.io-hover-shrink:hover { transform: scale(0.95); }
+/* Döntés / forgatás */
+.io-hover-rotate:hover { transform: rotate(4deg); }
+.io-hover-tilt:hover   { transform: perspective(600px) rotateX(6deg) rotateY(-6deg); }
+/* Glow / ragyogás */
+.io-hover-glow:hover   { box-shadow: var(--io-hover-glow); }
+/* Lebegés (emelés + árnyék) */
+.io-hover-float:hover  { transform: translateY(-6px); box-shadow: 0 18px 40px -12px rgba(0,0,0,0.35); }
+/* Push (megnyomás) */
+.io-hover-press:active { transform: scale(0.96); }
+
+/* Kombinált gyakori páros: lift + glow */
+.io-hover-pop:hover {
+  transform: translateY(-4px) scale(1.03);
+  box-shadow: 0 16px 40px -14px rgba(0,0,0,0.4);
+}
+
+/* Aláhúzás kibújás (linkekhez) */
+.io-hover-underline {
+  position: relative;
+}
+.io-hover-underline::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  width: 100%;
+  height: 2px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--io-hover-duration) var(--io-ease-smooth);
+}
+.io-hover-underline:hover::after { transform: scaleX(1); }
+
+/* Fény-sweep (gombokra): áthúzódó csillanás */
+.io-hover-sweep {
+  position: relative;
+  overflow: hidden;
+}
+.io-hover-sweep::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 80%;
+  height: 100%;
+  background: linear-gradient(
+    100deg,
+    transparent,
+    rgba(255, 255, 255, 0.45),
+    transparent
+  );
+  transform: skewX(-20deg);
+  transition: left 600ms var(--io-ease-out);
+}
+.io-hover-sweep:hover::before { left: 140%; }
+
+/* Border-reveal gomb (háttér kitöltés balról) */
+.io-hover-border {
+  position: relative;
+  overflow: hidden;
+  z-index: 0;
+  border: 2px solid currentColor;
+  background-color: transparent;
+}
+.io-hover-border::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 0%;
+  background-color: currentColor;
+  transition: width var(--io-hover-duration) var(--io-ease-out);
+  z-index: -1;
+}
+.io-hover-border:hover::after { width: 100%; }
+
+/* Magnetic + 3D tilt: a JS állítja a --io-mx/--io-my változókat.
+   Itt csak a transform-csatorna van előkészítve. */
+.io-magnetic,
+.io-tilt {
+  transition: transform 200ms var(--io-ease-out);
+  transform: translate(var(--io-mx, 0px), var(--io-my, 0px))
+             rotateX(var(--io-rx, 0deg)) rotateY(var(--io-ry, 0deg));
+  transform-style: preserve-3d;
+}

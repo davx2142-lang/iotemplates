@@ -1,0 +1,15 @@
+/* ============================================================
+   IO Motion — forrás belépőpont (dev / bundler)
+   A modulok kaszkád-sorrendje. Produkcióhoz inkább a buildelt
+   dist/io.css vagy dist/io.min.css fájlt használd.
+   ============================================================ */
+@import "./01-tokens.css";
+@import "./02-engine.css";
+@import "./04-reveal.css";
+@import "./05-attention.css";
+@import "./06-text.css";
+@import "./07-hover.css";
+@import "./08-path.css";
+@import "./09-effects.css";
+@import "./20-legacy.css";
+@import "./03-modifiers.css"; /* utoljára: a módosítók felülírnak */

@@ -1,0 +1,57 @@
+/* ============================================================
+   IO Motion — 01 · Design Tokens
+   Központi változók: easing, időzítés, távolság, perspektíva.
+   Minden más modul ezekre épül, így egy helyen hangolható.
+   ============================================================ */
+
+/* A reveal engine transzformáció-csatornái REGISZTRÁLT custom property-k.
+   Ez garantálja, hogy a böngésző újraszámolja az opacity/transform értéket,
+   amikor a változó az .io-in-nel megváltozik (a sima --var néha nem frissül),
+   és animálhatóvá is teszi őket. @property nélküli motorokban szimplán
+   öröklött változóként viselkednek (a reveal akkor is működik). */
+@property --io-opacity { syntax: "<number>"; inherits: false; initial-value: 1; }
+@property --io-scale   { syntax: "<number>"; inherits: false; initial-value: 1; }
+@property --io-tx      { syntax: "<length-percentage>"; inherits: false; initial-value: 0px; }
+@property --io-ty      { syntax: "<length-percentage>"; inherits: false; initial-value: 0px; }
+@property --io-tz      { syntax: "<length>"; inherits: false; initial-value: 0px; }
+@property --io-rotate  { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+@property --io-blur    { syntax: "<length>"; inherits: false; initial-value: 0px; }
+
+:root {
+  /* ---- Easing (időzítő görbék) ---- */
+  --io-ease-in:      cubic-bezier(0.55, 0.055, 0.675, 0.19);
+  --io-ease-out:     cubic-bezier(0.215, 0.61, 0.355, 1);
+  --io-ease-in-out:  cubic-bezier(0.645, 0.045, 0.355, 1);
+  --io-ease-bounce:  cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --io-ease-spring:  cubic-bezier(0.34, 1.56, 0.64, 1);   /* 2026 trend: rugós, "fizikai" érzet */
+  --io-ease-smooth:  cubic-bezier(0.22, 0.61, 0.36, 1);   /* lágy, prémium belépő */
+  --io-ease-snappy:  cubic-bezier(0.16, 1, 0.3, 1);       /* gyors start, lágy fékezés */
+
+  /* ---- Alap motion paraméterek (az engine ezeket olvassa) ---- */
+  --io-duration: 600ms;          /* alap belépő hossz */
+  --io-delay: 0ms;               /* alap késleltetés */
+  --io-ease: var(--io-ease-smooth);
+
+  /* ---- Távolság skála (slide / move effektek) ---- */
+  --io-distance: 1.5rem;         /* alap elmozdulás */
+  --io-distance-sm: 0.5rem;
+  --io-distance-md: 1.5rem;
+  --io-distance-lg: 3rem;
+  --io-distance-xl: 6rem;
+
+  /* ---- Skála / blur / rotáció alap erősség ---- */
+  --io-zoom-in-from: 0.85;
+  --io-zoom-out-from: 1.15;
+  --io-blur-from: 12px;
+  --io-rotate-from: -6deg;
+  --io-perspective: 1000px;
+
+  /* ---- Stagger (lépcsőzött belépő) ---- */
+  --io-stagger-step: 80ms;
+
+  /* ---- Hover interakció ---- */
+  --io-hover-lift: -6px;
+  --io-hover-scale: 1.05;
+  --io-hover-glow: 0 0 0 3px rgba(56, 189, 248, 0.35), 0 8px 30px rgba(56, 189, 248, 0.35);
+  --io-hover-duration: 250ms;
+}
