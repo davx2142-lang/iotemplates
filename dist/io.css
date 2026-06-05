@@ -1,6 +1,6 @@
 /*!
- * IO Motion v2.2.0 — utility-first CSS motion library
- * https://github.com/iotemplates/io-motion  ·  MIT License
+ * IO Motion v2.3.0 — utility-first CSS motion library
+ * https://github.com/davx2142-lang/iotemplates  ·  MIT License
  * Build: concatenated from src/ (do not edit dist directly)
  */
 
@@ -576,6 +576,30 @@
   display: inline-block;
   white-space: pre;
   will-change: transform, opacity;
+}
+
+/* ---- Görgetésre szín-váltó szöveg, betűről betűre (io-scrub-colorize) ----
+   Kombináld io-scrub-chars (vagy io-scrub-words) mellé. A két szín
+   DINAMIKUSAN megadható CSS-változókkal, és bármilyen helyzetben működik:
+     <h2 class="io-scrub io-scrub-chars io-scrub-colorize"
+         style="--io-color-from:#475569; --io-color-to:#38bdf8">...</h2>
+   Alapértékek: from = aktuális szövegszín, to = brand kék.
+   A JS minden betűre beállítja a saját --io-p haladását (0→1), a szín
+   ebből color-mix-szel keveredik. A felugró-mozgást NEM erőlteti:
+   ha nincs irány-osztály és nincs io-fade, csak a szín változik. */
+.io-scrub-colorize .io-sc,
+.io-scrub-colorize .io-sw {
+  color: color-mix(
+    in oklab,
+    var(--io-color-from, currentColor),
+    var(--io-color-to, #38bdf8) calc(var(--io-p, 0) * 100%)
+  );
+}
+/* Fallback color-mix nélküli (régi) böngészőkre: legalább a célszínre vált
+   félútnál, hogy a hatás akkor is látható legyen. */
+@supports not (color: color-mix(in oklab, red, blue 50%)) {
+  .io-scrub-colorize .io-sc,
+  .io-scrub-colorize .io-sw { color: var(--io-color-from, currentColor); }
 }
 
 /* ---- Folyamatos szöveg-effektek sebessége (gradient / shimmer) ---- */

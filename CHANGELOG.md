@@ -6,6 +6,14 @@ This project follows [Semantic Versioning](https://semver.org): `MAJOR.MINOR.PAT
 Every published version stays available forever via npm and CDN, e.g.
 `https://cdn.jsdelivr.net/npm/io-motion@2.2.0/dist/io.min.css`.
 
+## [2.3.0] — 2026-06-02
+
+### Added
+- **`io-scrub-colorize`** — scroll-linked, letter-by-letter colour change ("reading" effect): characters stay in place while the colour sweeps left-to-right as you scroll, blending `--io-color-from` → `--io-color-to`. Both colours are fully configurable; works standalone (auto-splits to characters) or combined with movement (`io-fade`, `io-slide-*`).
+
+### Changed
+- Per-character scrub timing reworked with a narrow transition band so colour changes crisply letter-by-letter (sharp reading front) instead of blurring across the whole word.
+
 ## [2.2.0] — 2026-06-01
 
 ### Added

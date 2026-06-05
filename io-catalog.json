@@ -229,12 +229,13 @@
       "desc": { "en": "Modifiers for io-scrub.", "hu": "Módosítók az io-scrub-hoz." },
       "requires": "js",
       "needs": ["io-scrub"],
-      "vars": ["--io-scrub-from", "--io-scrub-to", "--io-underline-color"],
+      "vars": ["--io-scrub-from", "--io-scrub-to", "--io-underline-color", "--io-color-from", "--io-color-to"],
       "items": [
         { "class": "io-scrub-color", "demo": "scrub", "desc": { "en": "Colour shifts with scroll progress (set --io-scrub-from/to).", "hu": "A szín a görgetési haladással változik (--io-scrub-from/to)." } },
         { "class": "io-scrub-underline", "demo": "scrub", "desc": { "en": "Underline draws in as you scroll (progress-linked).", "hu": "Az aláhúzás a görgetéssel húzódik be (haladás-vezérelt)." } },
         { "class": "io-scrub-words", "demo": "scrub", "desc": { "en": "Words rise in word-by-word, linked to scroll. Combine with io-slide-*/io-fade for direction.", "hu": "A szavak szavanként úsznak be, görgetéshez kötve. Iránnyal kombinálható (io-slide-*/io-fade)." } },
-        { "class": "io-scrub-chars", "demo": "scrub", "desc": { "en": "Letters pop in one-by-one, linked to scroll. Combine with io-slide-*/io-fade for direction.", "hu": "A betűk egyenként ugranak be, görgetéshez kötve. Iránnyal kombinálható (io-slide-*/io-fade)." } }
+        { "class": "io-scrub-chars", "demo": "scrub", "desc": { "en": "Letters pop in one-by-one, linked to scroll. Combine with io-slide-*/io-fade for direction.", "hu": "A betűk egyenként ugranak be, görgetéshez kötve. Iránnyal kombinálható (io-slide-*/io-fade)." } },
+        { "class": "io-scrub-colorize", "demo": "scrub", "vars": ["--io-color-from", "--io-color-to"], "desc": { "en": "Recolours text letter-by-letter as you scroll, blending --io-color-from → --io-color-to. Works standalone (auto-splits to chars) or combined with movement.", "hu": "Görgetésre betűről betűre átszínezi a szöveget, az --io-color-from → --io-color-to között keverve. Önállóan is megy (automatikusan betűkre bont), vagy mozgással kombinálva." } }
       ]
     }
   ],

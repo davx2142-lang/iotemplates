@@ -1,6 +1,6 @@
 {
   "name": "io-motion",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "description": "IO Motion — utility-first, combinable CSS motion library. Trigger and combine modern web animations with io- classes: the Tailwind way, but for motion. Works in plain HTML, PHP, and React.",
   "keywords": [
     "css",

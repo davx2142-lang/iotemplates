@@ -29,8 +29,8 @@ const ORDER = [
 
 const banner =
   "/*!\n" +
-  " * IO Motion v2.2.0 — utility-first CSS motion library\n" +
-  " * https://github.com/iotemplates/io-motion  ·  MIT License\n" +
+  " * IO Motion v2.3.0 — utility-first CSS motion library\n" +
+  " * https://github.com/davx2142-lang/iotemplates  ·  MIT License\n" +
   " * Build: concatenated from src/ (do not edit dist directly)\n" +
   " */\n\n";
 

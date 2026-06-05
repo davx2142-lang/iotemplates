@@ -1,5 +1,5 @@
 /* ============================================================
-   IO Motion — Runtime (io.js)  ·  v2.2.0
+   IO Motion — Runtime (io.js)  ·  v2.3.0
    Zéró függőség. Működik <script>-ként, ES module-ként és CJS-ként.
 
    Publikus API (window.IOMotion / default export):
@@ -142,8 +142,11 @@
     if (c.contains("io-zoom-out")) f.scale = 1.2;
     if (c.contains("io-blur")) f.blur = 14;
     if (c.contains("io-rotate-in")) f.rot = -8;
-    // felugró szöveg alapértelmezett iránya, ha nincs megadva: alulról fel + fade
-    if (isText && !hasDir) { f.ty = d; f.opacity = 0; }
+    // felugró szöveg alapértelmezett iránya, ha nincs megadva: alulról fel + fade.
+    // KIVÉTEL: ha csak színváltás a cél (io-scrub-colorize irány/fade nélkül),
+    // ne erőltessünk mozgást — maradjon helyben, csak a szín változzon.
+    var hasFade = c.contains("io-fade");
+    if (isText && !hasDir && !(c.contains("io-scrub-colorize") && !hasFade)) { f.ty = d; f.opacity = 0; }
     return f;
   }
   function scrubProgress(el, vh) {
@@ -169,15 +172,19 @@
       if (!f || !el.isConnected) continue;
       var base = scrubProgress(el, vh);
 
-      // per-span (szavanként/betűnként): minden span a saját haladásával ugrik fel
+      // per-span (szavanként/betűnként): minden span a saját haladásával fut
       if (el.__ioScrubKids) {
         el.style.setProperty("--io-p", base.toFixed(3)); // aláhúzáshoz a konténer-progress
         var kids = el.__ioScrubKids, n = kids.length;
+        // OLVASÁS-HATÁS: a colorize-nál keskeny átmeneti sáv → minden betű a saját
+        // pozíciójánál gyorsan vált (balról jobbra fut végig), nem mosódik el.
+        // Felugró/mozgó effektnél lágyabb, átfedő stagger (0.55).
+        var colorize = el.classList.contains("io-scrub-colorize");
+        var band = colorize ? Math.max(0.06, 1.2 / Math.max(1, n)) : 0.45;
+        var span = 1 - band;                       // ekkora szakaszon oszlanak el a küszöbök
         for (var k = 0; k < n; k++) {
-          // a span-saját progress: a konténer-haladásból időeltolással (stagger)
-          var spread = 0.55;                       // mekkora szakaszon fusson végig a stagger
-          var startK = (k / Math.max(1, n)) * spread;
-          var pk = (base - startK) / (1 - spread);
+          var startK = (k / Math.max(1, n - 1)) * span;  // betű küszöbe 0..span
+          var pk = (base - startK) / band;               // keskeny rámpa a küszöbnél
           if (pk < 0) pk = 0; else if (pk > 1) pk = 1;
           applyScrub(kids[k], f, pk);
         }
@@ -212,7 +219,12 @@
     els.forEach(function (el) {
       if (el.dataset.ioScrubBound) return;
       el.dataset.ioScrubBound = "1";
+      // szöveg-bontás, ha words/chars kérve VAGY ha colorize van bontó nélkül
+      // (a colorize alapból betűnként dolgozik → ilyenkor chars-ként bontjuk)
       if (el.classList.contains("io-scrub-words") || el.classList.contains("io-scrub-chars")) {
+        splitScrubText(el);
+      } else if (el.classList.contains("io-scrub-colorize")) {
+        el.classList.add("io-scrub-chars");
         splitScrubText(el);
       }
       el.__ioFrom = scrubAmount(el);
